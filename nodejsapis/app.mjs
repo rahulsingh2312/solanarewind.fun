@@ -1,14 +1,4 @@
-// File: app.js
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
-require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
+import axios from 'axios';
 
 // Utility Functions
 const generateRandomString = (length) => {
@@ -95,16 +85,8 @@ const calculateTotalProfitLoss = (holdings) => {
     };
 };
 
-// Main Route Handler
-app.get('/api/wallet-holdings', async (req, res) => {
-    const { walletAddress } = req.query;
-
-    if (!walletAddress) {
-        return res.status(400).json({ 
-            error: 'Wallet address is required' 
-        });
-    }
-
+// Main function to fetch and analyze wallet holdings
+async function fetchWalletHoldings(walletAddress) {
     try {
         // Generate dynamic cookies
         const dynamicCookies = generateDynamicCookie();
@@ -129,7 +111,7 @@ app.get('/api/wallet-holdings', async (req, res) => {
                 'sec-fetch-dest': 'empty',
                 'sec-fetch-mode': 'cors',
                 'sec-fetch-site': 'same-origin',
-                'cookie': cookieToHeaderString(dynamicCookies),
+                'cookie': dynamicCookies,
                 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
             }
         });
@@ -171,20 +153,20 @@ app.get('/api/wallet-holdings', async (req, res) => {
                 totalActivity: getTopActiveTokens(holdings, 1)[0]?.totalActivity
             },
             
-            // New total profit/loss summary
+            // Total profit/loss summary
             totalProfitLossSummary: calculateTotalProfitLoss(holdings)
         };
 
-        res.json(analysis);
+        console.log(JSON.stringify(analysis, null, 2));
+        return analysis;
     } catch (error) {
         console.error('Error fetching token data:', error);
-        res.status(500).json({ 
-            error: error.message || 'Unknown error occurred',
-        });
+        throw error;
     }
-});
+}
 
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// Wallet address to analyze (replace with the desired wallet address)
+const WALLET_ADDRESS = '4iG4s2F3eSByCkMvfsGhrvzXNoPrDFUJuA7Crtuf3Pvn';
+
+// Run the analysis
+fetchWalletHoldings(WALLET_ADDRESS);
