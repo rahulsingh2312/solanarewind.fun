@@ -3,6 +3,7 @@ import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { publicKey } from "@metaplex-foundation/umi";
 import { fetchAllDigitalAssetWithTokenByOwner } from "@metaplex-foundation/mpl-token-metadata";
 import axios from 'axios';
+export const runtime = 'edge'; 
 
 // Utility function for fee tracking (similar to the original implementation)
 class SolanaFeeTracker {

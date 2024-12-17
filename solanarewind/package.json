@@ -17,6 +17,7 @@
     "@solana/wallet-adapter-wallets": "^0.19.32",
     "@solana/web3.js": "^1.95.8",
     "axios": "^1.7.9",
+    "crypto": "^1.0.1",
     "framer-motion": "^11.15.0",
     "fs": "^0.0.1-security",
     "gsap": "^3.12.5",

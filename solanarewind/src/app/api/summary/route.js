@@ -1,6 +1,33 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
+export const runtime = 'edge';
+
+// Utility Functions
+const generateRandomString = (length) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    return Array.from(
+        { length }, 
+        () => chars[Math.floor(Math.random() * chars.length)]
+    ).join('');
+};
+
+const generateDynamicCookie = () => {
+    const timestamp = Date.now();
+    return {
+        '_ga': `GA1.1.${Math.floor(Math.random() * 1000000000)}.${timestamp}`,
+        '_ga_0XM0LYXGC8': `GS1.1.1.${timestamp}.1.1.${timestamp}.0.0.0`,
+        'cf_clearance': `${generateRandomString(32)}-${timestamp}-1.2.1.1-${generateRandomString(40)}`,
+        '__cf_bm': `${generateRandomString(32)}-${timestamp}-1.0.1.1-${generateRandomString(40)}`
+    };
+};
+
+const cookieToHeaderString = (cookieObj) => {
+    return Object.entries(cookieObj)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('; ');
+};
+
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const walletAddress = searchParams.get('walletAddress');
@@ -12,6 +39,9 @@ export async function GET(request) {
     }
 
     try {
+        // Generate dynamic cookies
+        const dynamicCookies = generateDynamicCookie();
+
         const response = await axios.get(`https://gmgn.ai/api/v1/wallet_holdings/sol/${walletAddress}`, {
             params: {
                 limit: 50000,
@@ -32,7 +62,7 @@ export async function GET(request) {
                 'sec-fetch-dest': 'empty',
                 'sec-fetch-mode': 'cors',
                 'sec-fetch-site': 'same-origin',
-                'cookie': '_ga=GA1.1.1884159000.1734303582; _ga_0XM0LYXGC8=GS1.1.1.1734303581.1.1.1734303612.0.0.0; cf_clearance=Lqr2._v7uby1KVJu7XBhiVbHU6m.sbmgD1OlwW3.gQk-1734356823-1.2.1.1-1EGtUeaoA3sQgdDWHSYt5yIMPYlsn2FpYyj1VRdC85DYUlGZeK_HqoQdfo1OLIeshDhKCcmUujhKr.ZQkxQ9e73GNtpEWJtBvH99v6OLxFUgsYTEKpQbWIG275WXrI4Nnte4ZrfI3RsdNGfXbyUtVM.rTWSuw7_mw9Mjkn8TxlmaV.TcxnM.va8KIA9yzOdiyH6YLrf8PiMJ3UOzG3Q1tO.35cjUVR8WC4V93SftLgv0rCHc9ny6nk201nUwCpcK9aukY93T97QPARgxg2bIrb2RnvSPUK1sftZRELsMTeUuJt04tfMF51.l4Qa8WIxIbO5yCsG9negVLr8blgA2Noq9Mvwqwg2bSkUDBUoBHs9_B.6K5dtcpQYimXiJpe0mGc9JtB8vYUEDbBL7TOLnCAAJJFl6fAYptfx.zrWhRoiYQX3fpP7V97ku7u7cLdWk; __cf_bm=rc9xbgVJkTrR2Ycg2jZw_f2ulEcFYs5iyBSch1hn.KU-1734356828-1.0.1.1-QWMJftnR4bE4hn3Cl6dNLbcsM1hT2JZQA4X5oUeLYiYMh874M7px3J4xS5Knft96wrHnN35iO7wunWBZ7UZOvA',
+                'cookie': cookieToHeaderString(dynamicCookies),
                 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
             }
         });
@@ -143,7 +173,7 @@ export async function GET(request) {
     } catch (error) {
         console.error('Error fetching token data:', error);
         return NextResponse.json({ 
-            error: 'Failed to fetch token data' 
+            error: error.message || 'Unknown error occurred',
         }, { status: 500 });
     }
 }
