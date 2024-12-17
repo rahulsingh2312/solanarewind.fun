@@ -1,11 +1,43 @@
 "use client";
 
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import {
+  ConnectionProvider,
+  WalletProvider,
+  useWallet,
+} from "@solana/wallet-adapter-react";
+import {
+  WalletModalProvider,
+  WalletMultiButton,
+} from "@solana/wallet-adapter-react-ui";
+import { clusterApiUrl, Transaction } from "@solana/web3.js";
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+} from "@solana/wallet-adapter-wallets";
 import React, { useEffect, useRef } from "react";
 import Starfield from "../../components/starField"; // Adjust based on export type
 import { gsap } from "gsap";
-import Marquee from "react-fast-marquee";
+
+import "@solana/wallet-adapter-react-ui/styles.css";
+import { FaChevronRight } from "react-icons/fa";
 
 export default function Page() {
+  const network = WalletAdapterNetwork.Devnet;
+  const router = useRouter();
+
+  // You can also provide a custom RPC endpoint
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+
+  const [walletConnected, setWalletConnected] = useState(false);
+
+  // Configure supported wallets
+  const wallets = useMemo(
+    () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
+    [network]
+  );
   const pathRef = useRef(null); // Ref for the SVG path
   const pathRef2 = useRef(null); // Ref for the SVG path
 
@@ -36,19 +68,59 @@ export default function Page() {
   }, []);
 
   return (
-    <div>
+    <div className="h-screen overflow-y-hidden">
       {/* <Marquee autoFill className="">
         <h1 className="text-white font-bold text-6xl">YEAR IN SOL</h1>
         <div className="h-20 w-20 bg-white rounded-full mx-20"></div>
       </Marquee> */}
       <GradientBlob2 />
       <GradientBlob />
-      <div className="bg-[#0F1011]/40 backdrop-blur-3xl rounded-xl  mx-auto mt-7 p-4 border border-white/10 w-[878px] h-[728px] z-50 relative"></div>
+      {/* <div className="bg-[#0F1011]/40 backdrop-blur-3xl rounded-xl  mx-auto p-4 border border-white/10 w-[878px] max-sm:w-screen max-md:w-10/12 h-screen z-50 relative ">
+        <h1 className="text-transparent bg-clip-text bg-gradient-to-b from-[#ffffff] to-[#413e3e] text-4xl font-bold">
+          A Year in Sol
+        </h1>
+      </div> */}
+      <div className="planet relative h-screen flex  flex-col z-40 items-center justify-center bg-[url('../../public/planet.svg')] bg-center bg-no-repeat">
+        <h1
+          className="text-transparent text-center z-50 text-[64px] font-medium"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0%, #FFF 49.83%, rgba(255, 255, 255, 0.18) 100%)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          Ready for your Solana Rewind 2024?
+        </h1>
+        <p className="font-normal text-md text-white/45 ">
+          Get a Solana Wrapped for all your trades made on memecoins!
+        </p>
+        <div className="mt-4 flex gap-4">
+          <ConnectionProvider endpoint={endpoint}>
+            <WalletProvider wallets={wallets} autoConnect>
+              <WalletModalProvider>
+                <WalletMultiButton />
+              </WalletModalProvider>
+            </WalletProvider>
+          </ConnectionProvider>
+
+          <div
+            onClick={() => {
+              router.push("/rewind");
+            }}
+            className="bg-white py-2 px-4 rounded-xl flex justify-center items-center cursor-pointer hover:bg-slate-500 transition-all hover:translate-x-2"
+          >
+            <FaChevronRight className="text-xl text-black" />
+          </div>
+        </div>
+      </div>
+
       <Starfield
         starCount={1000}
         starColor={[255, 255, 255]}
         speedFactor={0.05}
-        backgroundColor="black"
+        backgroundColor="#0B0C0E"
       />
       <div className="container">
         <svg
@@ -74,7 +146,7 @@ export default function Page() {
           height="928"
           viewBox="0 0 517 928"
           fill="none"
-          className="-rotate-45 -top-10 z-10 left-12 fixed"
+          className="-rotate-45 -top-20 z-10 left-12 fixed"
         >
           <path
             ref={pathRef2}
@@ -91,97 +163,11 @@ export default function Page() {
 
 function GradientBlob() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="654"
-      height="1024"
-      viewBox="0 0 654 1024"
-      fill="none"
-      className="fixed right-12"
-    >
-      <g filter="url(#filter0_f_246_169)">
-        <path
-          d="M466.969 433.364C450.739 223.571 164.241 -35.5095 188.231 -37.3653C212.22 -39.2211 350.842 252.625 367.072 462.419C383.301 672.213 295.563 1171.17 271.573 1173.03C322.136 1169.12 483.198 643.158 466.969 433.364Z"
-          fill="url(#paint0_linear_246_169)"
-        />
-      </g>
-      <defs>
-        <filter
-          id="filter0_f_246_169"
-          x="0.904938"
-          y="-223.274"
-          width="653.107"
-          height="1582.2"
-          filterUnits="userSpaceOnUse"
-          colorInterpolationFilters="sRGB"
-        >
-          <feFlood floodOpacity="0" result="BackgroundImageFix" />
-          <feBlend
-            mode="normal"
-            in="SourceGraphic"
-            in2="BackgroundImageFix"
-            result="shape"
-          />
-          <feGaussianBlur
-            stdDeviation="92.95"
-            result="effect1_foregroundBlur_246_169"
-          />
-        </filter>
-        <linearGradient
-          id="paint0_linear_246_169"
-          x1="303.556"
-          y1="-46.2868"
-          x2="397.13"
-          y2="1163.32"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop offset="0.268358" stopColor="#2AABEE" />
-          <stop offset="0.356667" stopColor="#2AABEE" stopOpacity="0.5" />
-        </linearGradient>
-      </defs>
-    </svg>
+    <div className="w-[251px] h-screen bg-[#2AABEE]/60 absolute right-80 -top-10 -rotate-45 blur-[185px]"></div>
   );
 }
 function GradientBlob2() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="635"
-      height="1024"
-      viewBox="0 0 635 1024"
-      fill="none"
-      className="fixed left-12"
-    >
-      <g filter="url(#filter0_f_246_170)">
-        <path
-          d="M288.773 615.098C276.552 825.164 316.269 1129.65 298.311 1128.61C280.353 1127.56 211.52 821.38 223.74 611.315C235.961 401.25 393.6 -29.3125 411.559 -28.2678C429.517 -27.2231 300.993 405.033 288.773 615.098Z"
-          fill="#AE47FF"
-          fillOpacity="0.9"
-        />
-      </g>
-      <defs>
-        <filter
-          id="filter0_f_246_170"
-          x="0.696136"
-          y="-249.87"
-          width="634.18"
-          height="1600.08"
-          filterUnits="userSpaceOnUse"
-          colorInterpolationFilters="sRGB"
-        >
-          <feFlood floodOpacity="0" result="BackgroundImageFix" />
-          <feBlend
-            mode="normal"
-            in="SourceGraphic"
-            in2="BackgroundImageFix"
-            result="shape"
-          />
-          <feGaussianBlur
-            stdDeviation="110.8"
-            result="effect1_foregroundBlur_246_170"
-          />
-        </filter>
-      </defs>
-    </svg>
+    <div className="w-40 h-screen bg-[#AE47FF]/60 absolute left-64 rotate-45 top-24 blur-[221px]"></div>
   );
 }
