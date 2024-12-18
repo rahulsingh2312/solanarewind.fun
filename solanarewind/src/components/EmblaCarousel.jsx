@@ -1,8 +1,11 @@
+"use client";
 import React, { useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
+import { useState, useEffect } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import { useAutoplay } from "../components/EmblaCarouselAutoplay";
 import { useAutoplayProgress } from "../components/EmblaCarouselAutoplayProgress";
+import { gsap } from "gsap";
 import {
   NextButton,
   PrevButton,
@@ -27,18 +30,41 @@ const EmblaCarousel = (props) => {
     useAutoplay(emblaApi);
 
   const { showAutoplayProgress } = useAutoplayProgress(emblaApi, progressNode);
+  const [slidesInView, setSlidesInView] = useState([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+
+    const updateSlidesInView = () => {
+      const inView = emblaApi.slidesInView();
+      const currentIndex = emblaApi.selectedScrollSnap();
+
+      setSlidesInView(inView);
+      setCurrentSlideIndex(currentIndex);
+
+      console.log("Current Slide Index:", currentIndex);
+      console.log("Slides In View:", inView);
+    };
+
+    emblaApi.on("select", updateSlidesInView);
+    updateSlidesInView(); // Initial update
+
+    return () => emblaApi.off("select", updateSlidesInView);
+  }, [emblaApi]);
+
+  const slidesall = [Slide1, Slide2, Slide3, Slide4, Slide5, Slide6, Slide7];
 
   return (
     <div className="embla">
-      <div className="embla__viewport" ref={emblaRef}>
+      <div className="embla__viewport " ref={emblaRef}>
         <div className="embla__container py-2 z-50 relative px-1 flex gap-4">
-          <Slide1 />
-          <Slide2 />
-          <Slide3 />
-          <Slide4 />
-          <Slide5 />
-          <Slide6 />
-          <Slide7 />
+          {slidesall.map((SlideComponent, index) => (
+            <SlideComponent
+              key={index}
+              opacity={currentSlideIndex === index ? 1 : 0.2}
+            />
+          ))}
         </div>
       </div>
 
@@ -72,9 +98,12 @@ const EmblaCarousel = (props) => {
 
 export default EmblaCarousel;
 
-const Slide1 = () => {
+const Slide1 = ({ opacity = 1 }) => {
   return (
-    <div className="h-[720px] bg-black border-zinc-800 border overflow-hidden rounded-lg embla__slide flex flex-col items-center justify-center">
+    <div
+      className="h-[720px] bg-black border-zinc-800 border overflow-hidden rounded-lg embla__slide flex flex-col items-center justify-center"
+      style={{ opacity }}
+    >
       <img
         src="./bluebars.png"
         className="fixed -top-24 select-none"
@@ -107,49 +136,166 @@ const Slide1 = () => {
   );
 };
 
-const Slide2 = () => {
+const Slide2 = ({ opacity = 0.5 }) => {
   return (
-    <div className="h-[720px] bg-white border rounded-lg embla__slide">
-      <h1>Slide 2</h1>
+    <div
+      className="h-[720px] bg-[#FEF102] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center"
+      style={{ opacity }}
+    >
+      <img
+        src="./bluehalfbars.png"
+        className="fixed -top-6 -left-6 h-2/5 animate-pulse select-none"
+        draggable="false"
+        alt=""
+      />
+      <h1 className="text-black text-4xl font-semibold">
+        You made <span>303</span> Transactions from this wallet!{" "}
+      </h1>
+      <p className="text-black/70 text-lg mt-2">
+        Sorry to say but you are such a pussy, most of the transactions were
+        USDC
+      </p>
+
+      <img
+        src="./bluehalfbars.png"
+        className="fixed -bottom-6 rotate-180 -right-6 h-2/5 animate-pulse select-none"
+        draggable="false"
+        alt=""
+      />
     </div>
   );
 };
 
-const Slide3 = () => {
+const Slide3 = ({ opacity = 0.5 }) => {
+  const [hover, setHover] = useState(false);
+  const pathRef = useRef(null);
+  useEffect(() => {
+    // GSAP Animation for the path
+    gsap.fromTo(
+      pathRef.current,
+      { strokeDasharray: "600", strokeDashoffset: "600" }, // Initial state
+      {
+        strokeDashoffset: 0,
+        duration: 4,
+        repeat: -1,
+        yoyo: true,
+        ease: "power1.inOut",
+      } // Animation
+    );
+  }, []);
   return (
-    <div className="h-[720px] bg-white border rounded-lg embla__slide">
-      <h1>Slide 3</h1>
+    <div
+      className="h-[720px] bg-black border relative rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-evenly border-zinc-800"
+      style={{ opacity }}
+    >
+      <div className="text-center text-xl font-medium">
+        Hover the box to know your favourite token!
+        <div
+          style={{ transition: "opacity 2s", opacity: hover ? 1 : 0 }}
+          className="text-gray-500"
+        >
+          USDC was your most Traded token
+        </div>
+      </div>
+
+      <div className="container flex items-center justify-center">
+        <div className="row">
+          <div className="col-12">
+            <img
+              className="img z-50 absolute h-48 -translate-y-8"
+              src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
+              style={{ transition: "opacity 2s", opacity: hover ? 1 : 0 }}
+            />
+          </div>
+          <div className="col-12 mt-5 d-flex justify-content-center">
+            <div className="box" onMouseOver={() => setHover(true)}>
+              <div className="box-body">
+                <img
+                  className="img"
+                  src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
+                />
+                <div className="box-lid">
+                  <div className="box-bowtie"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="239"
+            height="1108"
+            viewBox="0 0 239 1108"
+            fill="none"
+            className="-translate-y-10 translate-x-20 fixed"
+        >
+            <path
+                ref={pathRef}
+                d="M209 30L48.9591 257.155C24.148 292.371 24.4037 339.447 49.596 374.391L165.013 534.485C191.116 570.693 190.356 619.741 163.144 655.124L59.1528 790.339C29.2776 829.184 31.5977 883.87 64.6558 920.045L209 1078"
+                stroke="url(#paint0_linear_2008_52)"
+                strokeWidth="60"
+                strokeLinecap="round"
+            />
+            <defs>
+                <linearGradient
+                    id="paint0_linear_2008_52"
+                    x1="178.985"
+                    y1="30"
+                    x2="178.985"
+                    y2="1078"
+                    gradientUnits="userSpaceOnUse"
+                >
+                    <stop stopColor="#F8CFFF" />
+                    <stop offset="0.192374" stopColor="#B200F1" />
+                    <stop offset="0.700173" stopColor="#51005E" />
+                    <stop offset="1" stopColor="#050005" />
+                </linearGradient>
+            </defs>
+        </svg> */}
     </div>
   );
 };
 
-const Slide4 = () => {
+const Slide4 = ({ opacity = 0.5 }) => {
   return (
-    <div className="h-[720px] bg-white border rounded-lg embla__slide">
+    <div
+      className="h-[720px] bg-black border rounded-lg embla__slide"
+      style={{ opacity }}
+    >
       <h1>Slide 4</h1>
     </div>
   );
 };
 
-const Slide5 = () => {
+const Slide5 = ({ opacity = 0.5 }) => {
   return (
-    <div className="h-[720px] bg-white border rounded-lg embla__slide">
+    <div
+      className="h-[720px] bg-black border rounded-lg embla__slide"
+      style={{ opacity }}
+    >
       <h1>Slide 5</h1>
     </div>
   );
 };
 
-const Slide6 = () => {
+const Slide6 = ({ opacity = 0.5 }) => {
   return (
-    <div className="h-[720px] bg-white border rounded-lg embla__slide">
+    <div
+      className="h-[720px] bg-black border rounded-lg embla__slide"
+      style={{ opacity }}
+    >
       <h1>Slide 6</h1>
     </div>
   );
 };
 
-const Slide7 = () => {
+const Slide7 = ({ opacity = 0.5 }) => {
   return (
-    <div className="h-[720px] bg-white border rounded-lg embla__slide">
+    <div
+      className="h-[720px] bg-black border rounded-lg embla__slide"
+      style={{ opacity }}
+    >
       <h1>Slide 7</h1>
     </div>
   );
