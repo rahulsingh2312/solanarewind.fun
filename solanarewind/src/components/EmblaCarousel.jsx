@@ -11,12 +11,13 @@ import {
   PrevButton,
   usePrevNextButtons,
 } from "../components/EmblaCarouselArrowButtons";
+import { FaPause, FaPlay } from "react-icons/fa";
 
 const EmblaCarousel = (props) => {
   const { slides, options } = props;
   const progressNode = useRef(null);
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [
-    Autoplay({ playOnInit: false, delay: 3000 }),
+    Autoplay({ playOnInit: false, delay: 7000 }),
   ]);
 
   const {
@@ -53,11 +54,43 @@ const EmblaCarousel = (props) => {
     return () => emblaApi.off("select", updateSlidesInView);
   }, [emblaApi]);
 
-  const slidesall = [Slide1, Slide2, Slide3, Slide4, Slide5, Slide6, Slide7];
+  const slidesall = [
+    Slide1,
+    Slide2,
+    Slide3,
+    Slide4,
+    Slide5,
+    Slide6,
+    Slide7,
+    Slide8,
+  ];
+
+  //when user presses space bar it should trigger the pause function and when left arrow then prev when right arrow then next
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "ArrowLeft") {
+        onAutoplayButtonClick(onPrevButtonClick);
+      } else if (e.key === "ArrowRight") {
+        onAutoplayButtonClick(onNextButtonClick);
+      } else if (e.key === " ") {
+        toggleAutoplay();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    onAutoplayButtonClick,
+    onPrevButtonClick,
+    onNextButtonClick,
+    toggleAutoplay,
+  ]);
 
   return (
-    <div className="embla">
-      <div className="embla__viewport " ref={emblaRef}>
+    <div className="embla w-[100vh] h-screen flex flex-col justify-around mx-auto">
+      <div className="embla__viewport" ref={emblaRef}>
         <div className="embla__container py-2 z-50 relative px-1 flex gap-4">
           {slidesall.map((SlideComponent, index) => (
             <SlideComponent
@@ -68,12 +101,19 @@ const EmblaCarousel = (props) => {
         </div>
       </div>
 
-      <div className="embla__controls z-40">
-        <div className="embla__buttons">
+      <div className="flex flex-col-reverse items-center justify-center gap-2">
+        <div className="flex">
           <PrevButton
             onClick={() => onAutoplayButtonClick(onPrevButtonClick)}
             disabled={prevBtnDisabled}
           />
+          <button
+            className="embla__play"
+            onClick={toggleAutoplay}
+            type="button"
+          >
+            {autoplayIsPlaying ? <FaPause /> : <FaPlay />}
+          </button>
           <NextButton
             onClick={() => onAutoplayButtonClick(onNextButtonClick)}
             disabled={nextBtnDisabled}
@@ -87,10 +127,6 @@ const EmblaCarousel = (props) => {
         >
           <div className="embla__progress__bar" ref={progressNode} />
         </div>
-
-        <button className="embla__play" onClick={toggleAutoplay} type="button">
-          {autoplayIsPlaying ? "Stop" : "Start"}
-        </button>
       </div>
     </div>
   );
@@ -101,7 +137,7 @@ export default EmblaCarousel;
 const Slide1 = ({ opacity = 1 }) => {
   return (
     <div
-      className="h-[720px] bg-black border-zinc-800 border overflow-hidden rounded-lg embla__slide flex flex-col items-center justify-center"
+      className="h-full bg-black border-zinc-800 border overflow-hidden rounded-lg embla__slide flex flex-col items-center justify-center"
       style={{ opacity }}
     >
       <img
@@ -139,7 +175,7 @@ const Slide1 = ({ opacity = 1 }) => {
 const Slide2 = ({ opacity = 0.5 }) => {
   return (
     <div
-      className="h-[720px] bg-[#FEF102] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center"
+      className="h-full bg-[#FEF102] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center"
       style={{ opacity }}
     >
       <img
@@ -168,24 +204,10 @@ const Slide2 = ({ opacity = 0.5 }) => {
 
 const Slide3 = ({ opacity = 0.5 }) => {
   const [hover, setHover] = useState(false);
-  const pathRef = useRef(null);
-  useEffect(() => {
-    // GSAP Animation for the path
-    gsap.fromTo(
-      pathRef.current,
-      { strokeDasharray: "600", strokeDashoffset: "600" }, // Initial state
-      {
-        strokeDashoffset: 0,
-        duration: 4,
-        repeat: -1,
-        yoyo: true,
-        ease: "power1.inOut",
-      } // Animation
-    );
-  }, []);
+
   return (
     <div
-      className="h-[720px] bg-black border relative rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-evenly border-zinc-800"
+      className="h-full bg-black border relative rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-evenly border-zinc-800"
       style={{ opacity }}
     >
       <div className="text-center text-xl font-medium">
@@ -204,7 +226,7 @@ const Slide3 = ({ opacity = 0.5 }) => {
             <img
               className="img z-50 absolute h-48 -translate-y-8"
               src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
-              style={{ transition: "opacity 2s", opacity: hover ? 1 : 0 }}
+              style={{ transition: "opacity 5s", opacity: hover ? 1 : 0 }}
             />
           </div>
           <div className="col-12 mt-5 d-flex justify-content-center">
@@ -222,48 +244,62 @@ const Slide3 = ({ opacity = 0.5 }) => {
           </div>
         </div>
       </div>
-      {/* <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="239"
-            height="1108"
-            viewBox="0 0 239 1108"
-            fill="none"
-            className="-translate-y-10 translate-x-20 fixed"
-        >
-            <path
-                ref={pathRef}
-                d="M209 30L48.9591 257.155C24.148 292.371 24.4037 339.447 49.596 374.391L165.013 534.485C191.116 570.693 190.356 619.741 163.144 655.124L59.1528 790.339C29.2776 829.184 31.5977 883.87 64.6558 920.045L209 1078"
-                stroke="url(#paint0_linear_2008_52)"
-                strokeWidth="60"
-                strokeLinecap="round"
-            />
-            <defs>
-                <linearGradient
-                    id="paint0_linear_2008_52"
-                    x1="178.985"
-                    y1="30"
-                    x2="178.985"
-                    y2="1078"
-                    gradientUnits="userSpaceOnUse"
-                >
-                    <stop stopColor="#F8CFFF" />
-                    <stop offset="0.192374" stopColor="#B200F1" />
-                    <stop offset="0.700173" stopColor="#51005E" />
-                    <stop offset="1" stopColor="#050005" />
-                </linearGradient>
-            </defs>
-        </svg> */}
     </div>
   );
 };
 
 const Slide4 = ({ opacity = 0.5 }) => {
+  const pathRef = useRef(null);
+  useEffect(() => {
+    // GSAP Animation for the path
+    gsap.fromTo(
+      pathRef.current,
+      { strokeDasharray: "600", strokeDashoffset: "600" }, // Initial state
+      {
+        strokeDashoffset: 0,
+        duration: 4,
+        repeat: -1,
+        yoyo: true,
+        ease: "power1.inOut",
+      } // Animation
+    );
+  }, []);
   return (
     <div
-      className="h-[720px] bg-black border rounded-lg embla__slide"
+      className="h-full bg-black border rounded-lg embla__slide overflow-hidden border-gray-900"
       style={{ opacity }}
     >
-      <h1>Slide 4</h1>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="239"
+        height="1108"
+        viewBox="0 0 239 1108"
+        fill="none"
+        className="-translate-y-10 translate-x-20 fixed"
+      >
+        <path
+          ref={pathRef}
+          d="M209 30L48.9591 257.155C24.148 292.371 24.4037 339.447 49.596 374.391L165.013 534.485C191.116 570.693 190.356 619.741 163.144 655.124L59.1528 790.339C29.2776 829.184 31.5977 883.87 64.6558 920.045L209 1078"
+          stroke="url(#paint0_linear_2008_52)"
+          strokeWidth="60"
+          strokeLinecap="round"
+        />
+        <defs>
+          <linearGradient
+            id="paint0_linear_2008_52"
+            x1="178.985"
+            y1="30"
+            x2="178.985"
+            y2="1078"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#F8CFFF" />
+            <stop offset="0.192374" stopColor="#B200F1" />
+            <stop offset="0.700173" stopColor="#51005E" />
+            <stop offset="1" stopColor="#050005" />
+          </linearGradient>
+        </defs>
+      </svg>
     </div>
   );
 };
@@ -271,7 +307,7 @@ const Slide4 = ({ opacity = 0.5 }) => {
 const Slide5 = ({ opacity = 0.5 }) => {
   return (
     <div
-      className="h-[720px] bg-black border rounded-lg embla__slide"
+      className="h-full bg-black border rounded-lg embla__slide"
       style={{ opacity }}
     >
       <h1>Slide 5</h1>
@@ -282,7 +318,7 @@ const Slide5 = ({ opacity = 0.5 }) => {
 const Slide6 = ({ opacity = 0.5 }) => {
   return (
     <div
-      className="h-[720px] bg-black border rounded-lg embla__slide"
+      className="h-full bg-black border rounded-lg embla__slide"
       style={{ opacity }}
     >
       <h1>Slide 6</h1>
@@ -293,10 +329,20 @@ const Slide6 = ({ opacity = 0.5 }) => {
 const Slide7 = ({ opacity = 0.5 }) => {
   return (
     <div
-      className="h-[720px] bg-black border rounded-lg embla__slide"
+      className="h-full bg-black border rounded-lg embla__slide"
       style={{ opacity }}
     >
       <h1>Slide 7</h1>
+    </div>
+  );
+};
+const Slide8 = ({ opacity = 0.5 }) => {
+  return (
+    <div
+      className="h-full bg-black border rounded-lg embla__slide"
+      style={{ opacity }}
+    >
+      <h1>Slide 8</h1>
     </div>
   );
 };

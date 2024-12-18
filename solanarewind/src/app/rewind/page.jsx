@@ -54,7 +54,7 @@ const page = () => {
     //     </WalletModalProvider>
     //   </WalletProvider>
     // </ConnectionProvider>
-    <div className="w-screen h-screen">
+    <div className="h-screen w-screen">
       <EmblaCarousel slides={SLIDES} options={OPTIONS} />
       <Starfield
         starCount={1000}
