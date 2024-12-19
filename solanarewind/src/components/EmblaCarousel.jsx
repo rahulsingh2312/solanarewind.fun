@@ -6,6 +6,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { useAutoplay } from "../components/EmblaCarouselAutoplay";
 import { useAutoplayProgress } from "../components/EmblaCarouselAutoplayProgress";
 import { gsap } from "gsap";
+import axios from "axios";
 import { useWallet } from "@solana/wallet-adapter-react";
 import {
   NextButton,
@@ -19,6 +20,8 @@ const EmblaCarousel = (props) => {
   const { publicKey } = useWallet();
   const [slides, setSlides] = useState([]);
   const progressNode = useRef(null);
+  const [tokenData, setTokenData] = useState({ symbol: "", icon: "" });
+
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [
     Autoplay({ playOnInit: false, delay: 7000 }),
   ]);
@@ -27,20 +30,45 @@ const EmblaCarousel = (props) => {
       const storedData = localStorage.getItem(publicKey.toString());
       if (storedData) {
         const analysisPoints = JSON.parse(storedData).split("\n\n");
-        setSlides(
-          analysisPoints.map((point) => ({
-            content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "),
-          }))
+
+        const filteredPoints = analysisPoints.filter(
+          (point) => /^\d+\.\s\*\*[^*]+/.test(point) // Matches only lines starting with "number. **text"
         );
-        console.log(
-          "Slides:",
-          slides,
-          analysisPoints.map((point) => ({
-            content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "),
-          }))
-        );
+
+        const cleanedSlides = filteredPoints.map((point) => ({
+          content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "), // Removes extra `**` from title and keeps the structure.
+        }));
+
+        setSlides(cleanedSlides);
+
+        console.log("Slides:", cleanedSlides);
       }
     }
+  }, [publicKey]);
+
+  useEffect(() => {
+    const fetchTokenData = async () => {
+      if (publicKey) {
+        try {
+          const response = await axios.get(
+            `/api/summary?walletAddress=${publicKey.toString()}`
+          );
+          console.log("API response:", response.data.data.bagholder); // Debugging
+          const { bagholder } = response.data.data.bagholder;
+          if (bagholder) {
+            setTokenData({
+              symbol: bagholder.symbol,
+              icon: bagholder.icon,
+            });
+            console.log(tokenData);
+          }
+        } catch (error) {
+          console.error("Error fetching token data:", error);
+        }
+      }
+    };
+
+    fetchTokenData();
   }, [publicKey]);
 
   const {
@@ -81,7 +109,7 @@ const EmblaCarousel = (props) => {
   const slidesall = [
     Slide1,
     (props) => <Slide2 {...props} slideData={slides[0]} />,
-    (props) => <Slide3 {...props} slideData={slides[1]} />,
+    (props) => <Slide3 {...props} notslide={tokenData} />,
     (props) => <Slide4 {...props} slideData={slides[2]} />,
     (props) => <Slide5 {...props} slideData={slides[3]} />,
     (props) => <Slide6 {...props} slideData={slides[4]} />,
@@ -217,8 +245,12 @@ const Slide1 = ({ opacity = 1 }) => {
 };
 
 const Slide2 = ({ opacity = 0.5, slideData }) => {
-  // Split content at the first colon to separate title and description
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
+    /:(.*)/s
+  );
+  // Remove leading '**' from title and description if they exist
+  const title = rawTitle?.replace(/^\*\*/, "").trim();
+  const description = rawDescription?.replace(/^\*\*/, "").trim();
 
   return (
     <div
@@ -245,40 +277,45 @@ const Slide2 = ({ opacity = 0.5, slideData }) => {
     </div>
   );
 };
-const Slide3 = ({ opacity = 0.5 }) => {
+const Slide3 = ({ opacity = 0.5, notslide }) => {
   const [hover, setHover] = useState(false);
-
+  const { symbol, icon } = notslide || { symbol: "", icon: "" };
+  {
+    console.log(notslide);
+  }
   return (
     <div
       className="h-full bg-black border relative rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-evenly border-zinc-800"
       style={{ opacity }}
     >
       <div className="text-center text-xl font-medium">
-        Hover the box to know your favourite token!
+        Hover the box to know your favorite token!
         <div
           style={{ transition: "opacity 2s", opacity: hover ? 1 : 0 }}
           className="text-gray-500"
         >
-          USDC was your most Traded token
+          {symbol} was your most Traded token
         </div>
       </div>
 
       <div className="container flex items-center justify-center">
         <div className="row">
           <div className="col-12">
-            <img
-              className="img z-50 absolute h-48 -translate-y-8"
-              src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
-              style={{ transition: "opacity 5s", opacity: hover ? 1 : 0 }}
-            />
+            {icon && (
+              <img
+                className="img z-50 absolute h-48 -translate-y-8"
+                src={icon}
+                alt={`${symbol} logo`}
+                style={{ transition: "opacity 5s", opacity: hover ? 1 : 0 }}
+              />
+            )}
           </div>
           <div className="col-12 mt-5 d-flex justify-content-center">
             <div className="box" onMouseOver={() => setHover(true)}>
               <div className="box-body">
-                <img
-                  className="img"
-                  src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
-                />
+                {icon && (
+                  <img className="img" src={icon} alt={`${symbol} logo`} />
+                )}
                 <div className="box-lid">
                   <div className="box-bowtie"></div>
                 </div>
@@ -291,7 +328,14 @@ const Slide3 = ({ opacity = 0.5 }) => {
   );
 };
 
-const Slide4 = ({ opacity = 0.5 }) => {
+const Slide4 = ({ opacity = 0.5, slideData }) => {
+  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
+    /:(.*)/s
+  );
+  // Remove leading '**' from title and description if they exist
+  const title = rawTitle?.replace(/^\*\*/, "").trim();
+  const description = rawDescription?.replace(/^\*\*/, "").trim();
+
   const container = useRef(null);
   const tl = useRef(null);
   const winnerTableRef = useRef(null);
@@ -374,7 +418,12 @@ const Slide4 = ({ opacity = 0.5 }) => {
 };
 
 const Slide5 = ({ opacity = 0.5, slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
+    /:(.*)/s
+  );
+  // Remove leading '**' from title and description if they exist
+  const title = rawTitle?.replace(/^\*\*/, "").trim();
+  const description = rawDescription?.replace(/^\*\*/, "").trim();
 
   return (
     <div
@@ -388,7 +437,12 @@ const Slide5 = ({ opacity = 0.5, slideData }) => {
 };
 
 const Slide6 = ({ opacity = 0.5, slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
+    /:(.*)/s
+  );
+  // Remove leading '**' from title and description if they exist
+  const title = rawTitle?.replace(/^\*\*/, "").trim();
+  const description = rawDescription?.replace(/^\*\*/, "").trim();
 
   return (
     <div
@@ -401,7 +455,12 @@ const Slide6 = ({ opacity = 0.5, slideData }) => {
   );
 };
 const Slide7 = ({ opacity = 0.5, slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
+    /:(.*)/s
+  );
+  // Remove leading '**' from title and description if they exist
+  const title = rawTitle?.replace(/^\*\*/, "").trim();
+  const description = rawDescription?.replace(/^\*\*/, "").trim();
 
   return (
     <div
@@ -415,7 +474,12 @@ const Slide7 = ({ opacity = 0.5, slideData }) => {
 };
 
 const Slide8 = ({ opacity = 0.5, slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
+    /:(.*)/s
+  );
+  // Remove leading '**' from title and description if they exist
+  const title = rawTitle?.replace(/^\*\*/, "").trim();
+  const description = rawDescription?.replace(/^\*\*/, "").trim();
 
   return (
     <div
@@ -428,7 +492,12 @@ const Slide8 = ({ opacity = 0.5, slideData }) => {
   );
 };
 const Slide9 = ({ opacity = 0.5, slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
+    /:(.*)/s
+  );
+  // Remove leading '**' from title and description if they exist
+  const title = rawTitle?.replace(/^\*\*/, "").trim();
+  const description = rawDescription?.replace(/^\*\*/, "").trim();
 
   return (
     <div
@@ -442,7 +511,12 @@ const Slide9 = ({ opacity = 0.5, slideData }) => {
 };
 
 const Slide10 = ({ opacity = 0.5, slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
+    /:(.*)/s
+  );
+  // Remove leading '**' from title and description if they exist
+  const title = rawTitle?.replace(/^\*\*/, "").trim();
+  const description = rawDescription?.replace(/^\*\*/, "").trim();
 
   return (
     <div
