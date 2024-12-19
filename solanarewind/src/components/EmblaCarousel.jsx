@@ -30,6 +30,9 @@ const EmblaCarousel = (props) => {
         setSlides(analysisPoints.map(point => ({
           content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, '$1: ')
         })));
+        console.log("Slides:", slides , analysisPoints.map(point => ({
+          content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, '$1: ')
+        })));
       }
     }
   }, [publicKey]);
@@ -68,16 +71,20 @@ const EmblaCarousel = (props) => {
     return () => emblaApi.off("select", updateSlidesInView);
   }, [emblaApi]);
 
-  const slidesall = [
-    Slide1,
-    Slide2,
-    Slide3,
-    Slide4,
-    Slide5,
-    Slide6,
-    Slide7,
-    Slide8,
-  ];
+// In your slidesall mapping
+const slidesall = [
+  Slide1,
+  (props) => <Slide2 {...props} slideData={slides[0]} />,
+  (props) => <Slide3 {...props} slideData={slides[1]} />,
+  (props) => <Slide4 {...props} slideData={slides[2]} />,
+  (props) => <Slide5 {...props} slideData={slides[3]} />,
+  (props) => <Slide6 {...props} slideData={slides[4]} />,
+  (props) => <Slide7 {...props} slideData={slides[5]} />,
+  (props) => <Slide8 {...props} slideData={slides[6]} />,
+  (props) => <Slide9 {...props} slideData={slides[7]} />,
+  (props) => <Slide10 {...props} slideData={slides[8]} />,
+  (props) => <Slide11 {...props} slideData={slides[9]} />
+];
 
   //when user presses space bar it should trigger the pause function and when left arrow then prev when right arrow then next
   useEffect(() => {
@@ -106,14 +113,14 @@ const EmblaCarousel = (props) => {
     <div className="embla w-[100vh] h-screen flex flex-col justify-around mx-auto">
       <div className="embla__viewport" ref={emblaRef}>
         <div className="embla__container py-2 z-50 relative px-1 flex gap-4">
-          {/* {slidesall.map((SlideComponent, index) => (
+          {slidesall.map((SlideComponent, index) => (
             <SlideComponent
               key={index}
               opacity={currentSlideIndex === index ? 1 : 0.2}
             />
-          ))} */}
+          ))}
 
-{slides.map((slide, index) => (
+{/* {slides.map((slide, index) => (
             <div
               key={index}
               className="h-full bg-black border-zinc-800 border overflow-hidden rounded-lg embla__slide flex flex-col items-center justify-center p-8"
@@ -126,7 +133,7 @@ const EmblaCarousel = (props) => {
                 {slide.content.split(':')[1]}
               </p>
             </div>
-          ))}
+          ))} */}
 
         </div>
       </div>
@@ -202,7 +209,10 @@ const Slide1 = ({ opacity = 1 }) => {
   );
 };
 
-const Slide2 = ({ opacity = 0.5 }) => {
+const Slide2 = ({ opacity = 0.5, slideData }) => {
+  // Split content at the first colon to separate title and description
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+  
   return (
     <div
       className="h-full bg-[#FEF102] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center"
@@ -214,12 +224,13 @@ const Slide2 = ({ opacity = 0.5 }) => {
         draggable="false"
         alt=""
       />
-      <h1 className="text-black text-4xl font-semibold">
-        You made <span>303</span> Transactions from this wallet!{" "}
+      
+      <h1 className="text-black text-4xl font-semibold text-center">
+        {title}
       </h1>
-      <p className="text-black/70 text-lg mt-2">
-        Sorry to say but you are such a pussy, most of the transactions were
-        USDC
+      
+      <p className="text-black/70 text-lg mt-2 text-center">
+        {description}
       </p>
 
       <img
@@ -231,8 +242,8 @@ const Slide2 = ({ opacity = 0.5 }) => {
     </div>
   );
 };
-
 const Slide3 = ({ opacity = 0.5 }) => {
+  
   const [hover, setHover] = useState(false);
 
   return (
@@ -278,7 +289,9 @@ const Slide3 = ({ opacity = 0.5 }) => {
   );
 };
 
-const Slide4 = ({ opacity = 0.5 }) => {
+const Slide4 = ({ opacity = 0.5 , slideData }) => {
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+
   const pathRef = useRef(null);
   useEffect(() => {
     // GSAP Animation for the path
@@ -299,6 +312,12 @@ const Slide4 = ({ opacity = 0.5 }) => {
       className="h-full bg-black border rounded-lg embla__slide overflow-hidden border-gray-900"
       style={{ opacity }}
     >
+      <div>
+        {title}
+      </div>
+      <div>
+        {description}
+      </div>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="239"
@@ -334,45 +353,98 @@ const Slide4 = ({ opacity = 0.5 }) => {
   );
 };
 
-const Slide5 = ({ opacity = 0.5 }) => {
+const Slide5 = ({ opacity = 0.5 , slideData }) => {
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+
   return (
     <div
       className="h-full bg-black border rounded-lg embla__slide"
       style={{ opacity }}
     >
-      <h1>Slide 5</h1>
+      <h1>{title}</h1>
+      {description}
     </div>
   );
 };
 
-const Slide6 = ({ opacity = 0.5 }) => {
+const Slide6 = ({ opacity = 0.5 , slideData }) => {
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+
   return (
     <div
       className="h-full bg-black border rounded-lg embla__slide"
       style={{ opacity }}
     >
-      <h1>Slide 6</h1>
+      <h1> {title}</h1>
+      <h1> {description}</h1>
+    </div>
+  );
+};
+const Slide7 = ({ opacity = 0.5 , slideData }) => {
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+
+  return (
+    <div
+      className="h-full bg-black border rounded-lg embla__slide"
+      style={{ opacity }}
+    >
+      <h1>{title}</h1>
+      {description}
     </div>
   );
 };
 
-const Slide7 = ({ opacity = 0.5 }) => {
+const Slide8 = ({ opacity = 0.5 , slideData }) => {
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+
   return (
     <div
       className="h-full bg-black border rounded-lg embla__slide"
       style={{ opacity }}
     >
-      <h1>Slide 7</h1>
+      <h1> {title}</h1>
+      <h1> {description}</h1>
     </div>
   );
 };
-const Slide8 = ({ opacity = 0.5 }) => {
+const Slide9 = ({ opacity = 0.5 , slideData }) => {
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+
   return (
     <div
       className="h-full bg-black border rounded-lg embla__slide"
       style={{ opacity }}
     >
-      <h1>Slide 8</h1>
+      <h1>{title}</h1>
+      {description}
     </div>
   );
 };
+
+const Slide10 = ({ opacity = 0.5 , slideData }) => {
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+
+  return (
+    <div
+      className="h-full bg-black border rounded-lg embla__slide"
+      style={{ opacity }}
+    >
+      <h1> {title}</h1>
+      <h1> {description}</h1>
+    </div>
+  );
+};
+const Slide11 = ({ opacity = 0.5 , slideData }) => {
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+
+  return (
+    <div
+      className="h-full bg-black border rounded-lg embla__slide"
+      style={{ opacity }}
+    >
+      <h1>{title}</h1>
+      {description}
+    </div>
+  );
+};
+

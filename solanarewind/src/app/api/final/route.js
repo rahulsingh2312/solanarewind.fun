@@ -43,9 +43,9 @@ export async function GET(request) {
         transactionCount: combinedResponse.transactions.totalTransactions || 0
       },
       tradingProfile: {
-        mostProfitableToken: combinedResponse.summary.mostProfitableToken || 'N/A',
-        mostLossToken: combinedResponse.summary.mostLossToken || 'N/A',
-        totalProfitLoss: combinedResponse.summary.totalProfitLossSummary || 'N/A'
+        mostProfitableToken: combinedResponse.summary.mostProfitableToken || '0',
+        mostLossToken: combinedResponse.summary.mostLossToken || '0',
+        totalProfitLoss: combinedResponse.summary.totalProfitLossSummary || '0'
       }
     };
 
