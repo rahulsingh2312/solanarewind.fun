@@ -6,7 +6,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { useAutoplay } from "../components/EmblaCarouselAutoplay";
 import { useAutoplayProgress } from "../components/EmblaCarouselAutoplayProgress";
 import { gsap } from "gsap";
-import {useWallet} from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import {
   NextButton,
   PrevButton,
@@ -15,7 +15,7 @@ import {
 import { FaPause, FaPlay } from "react-icons/fa";
 
 const EmblaCarousel = (props) => {
-  const {  options } = props;
+  const { options } = props;
   const { publicKey } = useWallet();
   const [slides, setSlides] = useState([]);
   const progressNode = useRef(null);
@@ -26,13 +26,19 @@ const EmblaCarousel = (props) => {
     if (publicKey) {
       const storedData = localStorage.getItem(publicKey.toString());
       if (storedData) {
-        const analysisPoints = JSON.parse(storedData).split('\n\n');
-        setSlides(analysisPoints.map(point => ({
-          content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, '$1: ')
-        })));
-        console.log("Slides:", slides , analysisPoints.map(point => ({
-          content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, '$1: ')
-        })));
+        const analysisPoints = JSON.parse(storedData).split("\n\n");
+        setSlides(
+          analysisPoints.map((point) => ({
+            content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "),
+          }))
+        );
+        console.log(
+          "Slides:",
+          slides,
+          analysisPoints.map((point) => ({
+            content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "),
+          }))
+        );
       }
     }
   }, [publicKey]);
@@ -71,22 +77,22 @@ const EmblaCarousel = (props) => {
     return () => emblaApi.off("select", updateSlidesInView);
   }, [emblaApi]);
 
-// In your slidesall mapping
-const slidesall = [
-  Slide1,
-  (props) => <Slide2 {...props} slideData={slides[0]} />,
-  (props) => <Slide3 {...props} slideData={slides[1]} />,
-  (props) => <Slide4 {...props} slideData={slides[2]} />,
-  (props) => <Slide5 {...props} slideData={slides[3]} />,
-  (props) => <Slide6 {...props} slideData={slides[4]} />,
-  (props) => <Slide7 {...props} slideData={slides[5]} />,
-  (props) => <Slide8 {...props} slideData={slides[6]} />,
-  (props) => <Slide9 {...props} slideData={slides[7]} />,
-  (props) => <Slide10 {...props} slideData={slides[8]} />,
-  (props) => <Slide11 {...props} slideData={slides[9]} />,
-  (props) => <Slide12 {...props} slideData={slides[10]} />,
-  (props) => <Slide13 {...props} slideData={slides[11]} />,
-];
+  // In your slidesall mapping
+  const slidesall = [
+    Slide1,
+    (props) => <Slide2 {...props} slideData={slides[0]} />,
+    (props) => <Slide3 {...props} slideData={slides[1]} />,
+    (props) => <Slide4 {...props} slideData={slides[2]} />,
+    (props) => <Slide5 {...props} slideData={slides[3]} />,
+    (props) => <Slide6 {...props} slideData={slides[4]} />,
+    (props) => <Slide7 {...props} slideData={slides[5]} />,
+    (props) => <Slide8 {...props} slideData={slides[6]} />,
+    (props) => <Slide9 {...props} slideData={slides[7]} />,
+    (props) => <Slide10 {...props} slideData={slides[8]} />,
+    (props) => <Slide11 {...props} slideData={slides[9]} />,
+    (props) => <Slide12 {...props} slideData={slides[10]} />,
+    (props) => <Slide13 {...props} slideData={slides[11]} />,
+  ];
 
   //when user presses space bar it should trigger the pause function and when left arrow then prev when right arrow then next
   useEffect(() => {
@@ -122,7 +128,7 @@ const slidesall = [
             />
           ))}
 
-{/* {slides.map((slide, index) => (
+          {/* {slides.map((slide, index) => (
             <div
               key={index}
               className="h-full bg-black border-zinc-800 border overflow-hidden rounded-lg embla__slide flex flex-col items-center justify-center p-8"
@@ -136,7 +142,6 @@ const slidesall = [
               </p>
             </div>
           ))} */}
-
         </div>
       </div>
 
@@ -214,7 +219,7 @@ const Slide1 = ({ opacity = 1 }) => {
 const Slide2 = ({ opacity = 0.5, slideData }) => {
   // Split content at the first colon to separate title and description
   const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
-  
+
   return (
     <div
       className="h-full bg-[#FEF102] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center"
@@ -226,14 +231,10 @@ const Slide2 = ({ opacity = 0.5, slideData }) => {
         draggable="false"
         alt=""
       />
-      
-      <h1 className="text-black text-4xl font-semibold text-center">
-        {title}
-      </h1>
-      
-      <p className="text-black/70 text-lg mt-2 text-center">
-        {description}
-      </p>
+
+      <h1 className="text-black text-4xl font-semibold text-center">{title}</h1>
+
+      <p className="text-black/70 text-lg mt-2 text-center">{description}</p>
 
       <img
         src="./bluehalfbars.png"
@@ -245,7 +246,6 @@ const Slide2 = ({ opacity = 0.5, slideData }) => {
   );
 };
 const Slide3 = ({ opacity = 0.5 }) => {
-  
   const [hover, setHover] = useState(false);
 
   return (
@@ -291,71 +291,89 @@ const Slide3 = ({ opacity = 0.5 }) => {
   );
 };
 
-const Slide4 = ({ opacity = 0.5 , slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+const Slide4 = ({ opacity = 0.5 }) => {
+  const container = useRef(null);
+  const tl = useRef(null);
+  const winnerTableRef = useRef(null);
 
-  const pathRef = useRef(null);
-  useEffect(() => {
-    // GSAP Animation for the path
-    gsap.fromTo(
-      pathRef.current,
-      { strokeDasharray: "600", strokeDashoffset: "600" }, // Initial state
-      {
-        strokeDashoffset: 0,
-        duration: 4,
-        repeat: -1,
-        yoyo: true,
-        ease: "power1.inOut",
-      } // Animation
-    );
+  const toggleTimeline = () => {
+    if (tl.current) {
+      tl.current.reversed(!tl.current.reversed());
+    }
+
+    // Animate the winnerTable image
+    gsap.to(winnerTableRef.current, {
+      opacity: 1,
+      y: -50,
+      duration: 2, // 2 seconds
+    });
+  };
+
+  React.useEffect(() => {
+    const boxes = gsap.utils.toArray(".box1");
+    tl.current = gsap
+      .timeline()
+      .to(boxes[0], { x: 120, rotation: 360 })
+      .to(boxes[1], { x: -120, y: 10, rotation: -360 }, "<")
+      .to(boxes[2], { y: -120 })
+      .reverse();
+
+    // Initialize the winnerTable with hidden state
+    gsap.set(winnerTableRef.current, { opacity: 0, y: 0 });
   }, []);
+
   return (
-    <div
-      className="h-full bg-black border rounded-lg embla__slide overflow-hidden border-gray-900"
-      style={{ opacity }}
-    >
-      <div>
-        {title}
-      </div>
-      <div>
-        {description}
-      </div>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="239"
-        height="1108"
-        viewBox="0 0 239 1108"
-        fill="none"
-        className="-translate-y-10 translate-x-20 fixed"
+    <div className="h-[90vh] w-[440px] bg-[#00ADF1] border rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900">
+      <img
+        src="./redBar.png"
+        alt=""
+        className="fixed top-0 mix-blend-color-dodge select-none"
+      />
+      <img
+        ref={winnerTableRef}
+        src="./winnerTable.png"
+        className="fixed -bottom-12 select-none"
+        alt=""
+      />
+      <button
+        onClick={toggleTimeline}
+        className="bg-white text-black rounded-full px-4 py-2 fixed bottom-12 hover:bg-gray-500 shadow-xl border border-gray-400"
       >
-        <path
-          ref={pathRef}
-          d="M209 30L48.9591 257.155C24.148 292.371 24.4037 339.447 49.596 374.391L165.013 534.485C191.116 570.693 190.356 619.741 163.144 655.124L59.1528 790.339C29.2776 829.184 31.5977 883.87 64.6558 920.045L209 1078"
-          stroke="url(#paint0_linear_2008_52)"
-          strokeWidth="60"
-          strokeLinecap="round"
-        />
-        <defs>
-          <linearGradient
-            id="paint0_linear_2008_52"
-            x1="178.985"
-            y1="30"
-            x2="178.985"
-            y2="1078"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="#F8CFFF" />
-            <stop offset="0.192374" stopColor="#B200F1" />
-            <stop offset="0.700173" stopColor="#51005E" />
-            <stop offset="1" stopColor="#050005" />
-          </linearGradient>
-        </defs>
-      </svg>
+        Reveal The Winner
+      </button>
+      <h2 className="top-32 text-xl font-medium fixed ">
+        Press the Button to reveal the winner!
+      </h2>
+
+      <div>
+        <div className="boxes-container" ref={container}>
+          <div className="box1 gradient-blue border shadow-2xl rounded-full">
+            <img
+              className="img"
+              src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
+            />
+          </div>
+          <div className="box1 gradient-blue border shadow-2xl overflow-hidden object-cover">
+            <img
+              src="https://techpoint.africa/crypto/wp-content/uploads/2024/11/Turbo-surges-as-top-meme-coin.jpg"
+              className="object-cover h-20"
+              alt=""
+            />
+          </div>
+          <div className="box1 gradient-blue border shadow-2xl overflow-hidden">
+            <img
+              src="https://static.news.bitcoin.com/wp-content/uploads/2023/04/pepes.jpg"
+              className="object-cover h-20"
+              alt=""
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-const Slide5 = ({ opacity = 0.5 , slideData }) => {
+const Slide5 = ({ opacity = 0.5, slideData }) => {
   const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
 
   return (
@@ -369,7 +387,7 @@ const Slide5 = ({ opacity = 0.5 , slideData }) => {
   );
 };
 
-const Slide6 = ({ opacity = 0.5 , slideData }) => {
+const Slide6 = ({ opacity = 0.5, slideData }) => {
   const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
 
   return (
@@ -382,7 +400,7 @@ const Slide6 = ({ opacity = 0.5 , slideData }) => {
     </div>
   );
 };
-const Slide7 = ({ opacity = 0.5 , slideData }) => {
+const Slide7 = ({ opacity = 0.5, slideData }) => {
   const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
 
   return (
@@ -396,7 +414,7 @@ const Slide7 = ({ opacity = 0.5 , slideData }) => {
   );
 };
 
-const Slide8 = ({ opacity = 0.5 , slideData }) => {
+const Slide8 = ({ opacity = 0.5, slideData }) => {
   const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
 
   return (
@@ -409,7 +427,7 @@ const Slide8 = ({ opacity = 0.5 , slideData }) => {
     </div>
   );
 };
-const Slide9 = ({ opacity = 0.5 , slideData }) => {
+const Slide9 = ({ opacity = 0.5, slideData }) => {
   const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
 
   return (
@@ -423,7 +441,7 @@ const Slide9 = ({ opacity = 0.5 , slideData }) => {
   );
 };
 
-const Slide10 = ({ opacity = 0.5 , slideData }) => {
+const Slide10 = ({ opacity = 0.5, slideData }) => {
   const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
 
   return (
@@ -436,7 +454,7 @@ const Slide10 = ({ opacity = 0.5 , slideData }) => {
     </div>
   );
 };
-const Slide11 = ({ opacity = 0.5 , slideData }) => {
+const Slide11 = ({ opacity = 0.5, slideData }) => {
   const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
 
   return (
@@ -450,7 +468,7 @@ const Slide11 = ({ opacity = 0.5 , slideData }) => {
   );
 };
 
-const Slide12 = ({ opacity = 0.5 , slideData }) => {
+const Slide12 = ({ opacity = 0.5, slideData }) => {
   const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
 
   return (
@@ -463,7 +481,7 @@ const Slide12 = ({ opacity = 0.5 , slideData }) => {
     </div>
   );
 };
-const Slide13 = ({ opacity = 0.5 , slideData }) => {
+const Slide13 = ({ opacity = 0.5, slideData }) => {
   const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
 
   return (
