@@ -83,7 +83,9 @@ const slidesall = [
   (props) => <Slide8 {...props} slideData={slides[6]} />,
   (props) => <Slide9 {...props} slideData={slides[7]} />,
   (props) => <Slide10 {...props} slideData={slides[8]} />,
-  (props) => <Slide11 {...props} slideData={slides[9]} />
+  (props) => <Slide11 {...props} slideData={slides[9]} />,
+  (props) => <Slide12 {...props} slideData={slides[10]} />,
+  (props) => <Slide13 {...props} slideData={slides[11]} />,
 ];
 
   //when user presses space bar it should trigger the pause function and when left arrow then prev when right arrow then next
@@ -448,3 +450,29 @@ const Slide11 = ({ opacity = 0.5 , slideData }) => {
   );
 };
 
+const Slide12 = ({ opacity = 0.5 , slideData }) => {
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+
+  return (
+    <div
+      className="h-full bg-black border rounded-lg embla__slide"
+      style={{ opacity }}
+    >
+      <h1>{title}</h1>
+      {description}
+    </div>
+  );
+};
+const Slide13 = ({ opacity = 0.5 , slideData }) => {
+  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+
+  return (
+    <div
+      className="h-full bg-black border rounded-lg embla__slide"
+      style={{ opacity }}
+    >
+      <h1>{title}</h1>
+      {description}
+    </div>
+  );
+};
