@@ -54,7 +54,7 @@ export const TransitionLink = ({ children, href, ...props }) => {
 
   const fetchRewindData = async (walletAddress) => {
     try {
-      const response = await fetch('https://solanarewind.vercel.app/api/langchain', {
+      const response = await fetch('/api/langchain', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,20 +116,20 @@ export const TransitionLink = ({ children, href, ...props }) => {
         throw new Error("Transaction failed");
       }
 
-      // if (data.success) {
-      //   localStorage.setItem(publicKey.toString(), JSON.stringify(data.analysis));
-      //   // Keep loading screen for a smooth transition
-      //   await new Promise(resolve => setTimeout(resolve, 500));
-      //   router.push(href);
-      // }
+      if (data.success) {
+        localStorage.setItem(publicKey.toString(), JSON.stringify(data.analysis));
+        // Keep loading screen for a smooth transition
+        await new Promise(resolve => setTimeout(resolve, 500));
+        router.push(href);
+      }
 
       // In TransitionLink component, modify where we store the data:
-if (data.success) {
-  const cleanedAnalysis = cleanAnalysisText(data.analysis);
-  localStorage.setItem(publicKey.toString(), JSON.stringify(cleanedAnalysis));
-  await new Promise(resolve => setTimeout(resolve, 500));
-  router.push(href);
-}
+// if (data.success) {
+//   const cleanedAnalysis = cleanAnalysisText(data.analysis);
+//   localStorage.setItem(publicKey.toString(), JSON.stringify(cleanedAnalysis));
+//   await new Promise(resolve => setTimeout(resolve, 500));
+//   router.push(href);
+// }
 
 
     } catch (error) {

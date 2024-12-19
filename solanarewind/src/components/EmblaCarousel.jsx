@@ -28,8 +28,7 @@ const EmblaCarousel = (props) => {
       if (storedData) {
         const analysisPoints = JSON.parse(storedData).split('\n\n');
         setSlides(analysisPoints.map(point => ({
-          title: point.split(':')[0].trim(),
-          content: point.split(':')[1]?.trim() || ''
+          content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, '$1: ')
         })));
       }
     }
