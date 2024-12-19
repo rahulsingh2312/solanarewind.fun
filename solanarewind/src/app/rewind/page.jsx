@@ -235,76 +235,121 @@ const Slide4 = () => {
   const container = useRef(null);
   const tl = useRef(null);
   const winnerTableRef = useRef(null);
+  const isRevealed = useRef(false);
 
   const toggleTimeline = () => {
-    if (tl.current) {
-      tl.current.reversed(!tl.current.reversed());
-    }
+    if (!isRevealed.current) {
+      if (tl.current) {
+        tl.current.play();
+      }
 
-    // Animate the winnerTable image
-    gsap.to(winnerTableRef.current, {
-      opacity: 1,
-      y: -50,
-      duration: 2, // 2 seconds
-    });
+      // Animate the winnerTable image
+      gsap.to(winnerTableRef.current, {
+        opacity: 1,
+        y: -50,
+        duration: 2,
+      });
+
+      isRevealed.current = true;
+    } else {
+      if (tl.current) {
+        tl.current.reverse();
+      }
+
+      gsap.to(winnerTableRef.current, {
+        opacity: 0,
+        y: 0,
+        duration: 2,
+      });
+
+      isRevealed.current = false;
+    }
   };
 
-  React.useEffect(() => {
-    const boxes = gsap.utils.toArray(".box1");
-    tl.current = gsap
-      .timeline()
-      .to(boxes[0], { x: 120, rotation: 360 })
-      .to(boxes[1], { x: -120, y: 10, rotation: -360 }, "<")
-      .to(boxes[2], { y: -120 })
-      .reverse();
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const boxes = gsap.utils.toArray(".box1");
+
+      // Initialize starting positions
+      gsap.set(boxes, { clearProps: "all" });
+
+      tl.current = gsap
+        .timeline({ paused: true })
+        .to(boxes[0], {
+          x: 120,
+          rotation: 360,
+          duration: 1.5,
+        })
+        .to(
+          boxes[1],
+          {
+            x: -120,
+            y: 10,
+            rotation: -360,
+            duration: 1.5,
+          },
+          "<"
+        )
+        .to(
+          boxes[2],
+          {
+            y: -120,
+            duration: 1.5,
+          },
+          "<"
+        );
+    }, container);
 
     // Initialize the winnerTable with hidden state
     gsap.set(winnerTableRef.current, { opacity: 0, y: 0 });
+
+    return () => ctx.revert(); // Cleanup
   }, []);
 
   return (
-    <div className="h-[90vh] w-[440px] bg-[#00ADF1] border rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900">
+    <div className="h-[90vh] w-[440px] bg-[#00ADF1] border rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900 relative">
       <img
         src="./redBar.png"
         alt=""
-        className="fixed top-0 mix-blend-color-dodge select-none"
+        className="absolute top-0 mix-blend-color-dodge select-none"
       />
       <img
         ref={winnerTableRef}
         src="./winnerTable.png"
-        className="fixed -bottom-12 select-none"
+        className="absolute -bottom-12 select-none"
         alt=""
       />
       <button
         onClick={toggleTimeline}
-        className="bg-white text-black rounded-full px-4 py-2 fixed bottom-12 hover:bg-gray-500 shadow-xl border border-gray-400"
+        className="absolute bottom-12 z-50 bg-white text-black rounded-full px-4 py-2 hover:bg-gray-500 shadow-xl border border-gray-400"
       >
-        Reveal The Winner
+        {isRevealed.current ? "Reset Animation" : "Reveal The Winner"}
       </button>
-      <h2 className="top-32 text-xl font-medium fixed ">
+      <h2 className="absolute top-32 text-xl font-medium">
         Press the Button to reveal the winner!
       </h2>
 
-      <div>
-        <div className="boxes-container" ref={container}>
-          <div className="box1 gradient-blue border shadow-2xl rounded-full">
+      <div ref={container} className="relative">
+        <div className="boxes-container">
+          <div className="box1 gradient-blue border shadow-2xl rounded-full w-20 h-20">
             <img
-              className="img"
+              className="w-full h-full object-cover"
               src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
+              alt="USDC"
             />
           </div>
-          <div className="box1 gradient-blue border shadow-2xl overflow-hidden object-cover">
+          <div className="box1 gradient-blue border shadow-2xl overflow-hidden w-20 h-20">
             <img
               src="https://techpoint.africa/crypto/wp-content/uploads/2024/11/Turbo-surges-as-top-meme-coin.jpg"
-              className="object-cover h-20"
-              alt=""
+              className="w-full h-full object-cover"
+              alt="Turbo"
             />
           </div>
-          <div className="box1 gradient-blue border shadow-2xl overflow-hidden">
+          <div className="box1 gradient-blue border shadow-2xl overflow-hidden w-20 h-20">
             <img
               src="https://static.news.bitcoin.com/wp-content/uploads/2023/04/pepes.jpg"
-              className="object-cover h-20"
-              alt=""
+              className="w-full h-full object-cover"
+              alt="Pepe"
             />
           </div>
         </div>
@@ -312,7 +357,6 @@ const Slide4 = () => {
     </div>
   );
 };
-
 const Slide5 = () => {
   return (
     <div className="h-[90vh] w-[440px] bg-black border rounded-lg embla__slide">
