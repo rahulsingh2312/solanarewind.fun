@@ -38,11 +38,13 @@ export async function GET(request) {
             }
         });
 
+         // Check if response.data is null
+         if (response.data === null) {
+            return NextResponse.json({ wallet: 'too new' });
+        }
         return NextResponse.json(response.data);
     } catch (error) {
-        console.error('Error fetching token data:', error);
-        return NextResponse.json({ 
-            error: error.message || 'Unknown error occurred',
-        }, { status: 500 });
+        return NextResponse.json({ wallet: 'too new' });
+
     }
 }

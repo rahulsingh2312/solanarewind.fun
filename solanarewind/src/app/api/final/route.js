@@ -1,5 +1,4 @@
-export const maxDuration = 60; 
-
+export const maxDuration = 60;
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
@@ -11,21 +10,18 @@ export async function GET(request) {
     return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
   }
 
+  // Use full URLs
+  const baseUrl = 'https://solanarewind.vercel.app/';
   const endpoints = {
-    summary: `https://solanarewind.vercel.app/api/summary?walletAddress=${walletAddress}`,
-    nfts: `https://solanarewind.vercel.app/api/nfts?walletAddress=${walletAddress}`,
-    tokensTransactions: `https://solanarewind.vercel.app/api/tokens?walletAddress=${walletAddress}&type=transactions`,
-    tokensOwned: `https://solanarewind.vercel.app/api/tokens?walletAddress=${walletAddress}&type=tokens`
+    summary: `${baseUrl}/api/summary?walletAddress=${walletAddress}`,
+    nfts: `${baseUrl}/api/nfts?walletAddress=${walletAddress}`,
+    tokensTransactions: `${baseUrl}/api/tokens?walletAddress=${walletAddress}&type=transactions`,
+    tokensOwned: `${baseUrl}/api/tokens?walletAddress=${walletAddress}&type=tokens`
   };
 
   try {
-    // Perform parallel API calls
-    const [
-      summaryResponse, 
-      nftsResponse, 
-      transactionsResponse, 
-      tokensResponse
-    ] = await Promise.all([
+    // Execute all requests and handle them individually
+    const results = await Promise.allSettled([
       axios.get(endpoints.summary),
       axios.get(endpoints.nfts),
       axios.get(endpoints.tokensTransactions),
@@ -33,45 +29,69 @@ export async function GET(request) {
     ]);
 
     const combinedResponse = {
-      summary: summaryResponse.data,
-      nfts: nftsResponse.data,
-      transactions: transactionsResponse.data,
-      tokens: tokensResponse.data
+      summary: results[0].status === 'fulfilled' ? results[0].value.data : { wallet: 'too new' },
+      nfts: results[1].status === 'fulfilled' ? results[1].value.data : { wallet: 'too new' },
+      transactions: results[2].status === 'fulfilled' ? results[2].value.data : { wallet: 'too new' },
+      tokens: results[3].status === 'fulfilled' ? results[3].value.data : { wallet: 'too new' }
     };
 
-    // Additional derived insights
-    combinedResponse.insights = {
+    // Construct insights based on actual available data
+    const insights = {
       totalEcosystemEngagement: {
-        nftCount: combinedResponse.nfts.totalNFTs,
-        tokenCount: combinedResponse.tokens.totalTokens,
-        transactionCount: combinedResponse.transactions.totalTransactions
+        nftCount: combinedResponse.nfts.totalNFTs || 0,
+        tokenCount: combinedResponse.tokens.totalTokens || 0,
+        transactionCount: combinedResponse.transactions.totalTransactions || 0
       },
       tradingProfile: {
-        mostProfitableToken: combinedResponse.summary.mostProfitableToken,
-        mostLossToken: combinedResponse.summary.mostLossToken,
-        totalProfitLoss: combinedResponse.summary.totalProfitLossSummary
-      },
-      transactionTimeline: {
+        mostProfitableToken: combinedResponse.summary.mostProfitableToken || 'N/A',
+        mostLossToken: combinedResponse.summary.mostLossToken || 'N/A',
+        totalProfitLoss: combinedResponse.summary.totalProfitLossSummary || 'N/A'
+      }
+    };
+
+    // Add transaction timeline if data is available
+    if (combinedResponse.transactions.firstTransaction && 
+        combinedResponse.transactions.lastTransaction) {
+      insights.transactionTimeline = {
         firstTransaction: combinedResponse.transactions.firstTransaction,
         lastTransaction: combinedResponse.transactions.lastTransaction,
         transactionSpan: calculateTransactionSpan(
           combinedResponse.transactions.firstTransaction.timestamp,
           combinedResponse.transactions.lastTransaction.timestamp
         )
-      }
-    };
+      };
+    } else {
+      insights.transactionTimeline = { wallet: 'too new' };
+    }
 
-    return NextResponse.json(combinedResponse, { status: 200 });
+    // Return the complete data
+    return NextResponse.json({
+      summary: combinedResponse.summary,
+      nfts: {
+        totalNFTs: combinedResponse.nfts.totalNFTs || 0,
+        nfts: combinedResponse.nfts.nfts || []
+      },
+      transactions: {
+        totalTransactions: combinedResponse.transactions.totalTransactions || 0,
+        firstTransaction: combinedResponse.transactions.firstTransaction,
+        lastTransaction: combinedResponse.transactions.lastTransaction
+      },
+      tokens: {
+        totalTokens: combinedResponse.tokens.totalTokens || 0,
+        tokens: combinedResponse.tokens.tokens || []
+      },
+      insights
+    }, { status: 200 });
+
   } catch (error) {
     console.error('Error aggregating wallet data:', error);
-    return NextResponse.json({ 
-      error: 'Failed to aggregate wallet data', 
-      details: error instanceof Error ? error.message : 'Unknown error' 
+    return NextResponse.json({
+      error: 'Failed to aggregate wallet data',
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
 
-// Utility function to calculate transaction timeline
 function calculateTransactionSpan(firstTimestamp, lastTimestamp) {
   const first = new Date(firstTimestamp);
   const last = new Date(lastTimestamp);

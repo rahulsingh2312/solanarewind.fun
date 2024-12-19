@@ -6,6 +6,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { useAutoplay } from "../components/EmblaCarouselAutoplay";
 import { useAutoplayProgress } from "../components/EmblaCarouselAutoplayProgress";
 import { gsap } from "gsap";
+import {useWallet} from "@solana/wallet-adapter-react";
 import {
   NextButton,
   PrevButton,
@@ -14,11 +15,25 @@ import {
 import { FaPause, FaPlay } from "react-icons/fa";
 
 const EmblaCarousel = (props) => {
-  const { slides, options } = props;
+  const {  options } = props;
+  const { publicKey } = useWallet();
+  const [slides, setSlides] = useState([]);
   const progressNode = useRef(null);
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [
     Autoplay({ playOnInit: false, delay: 7000 }),
   ]);
+  useEffect(() => {
+    if (publicKey) {
+      const storedData = localStorage.getItem(publicKey.toString());
+      if (storedData) {
+        const analysisPoints = JSON.parse(storedData).split('\n\n');
+        setSlides(analysisPoints.map(point => ({
+          title: point.split(':')[0].trim(),
+          content: point.split(':')[1]?.trim() || ''
+        })));
+      }
+    }
+  }, [publicKey]);
 
   const {
     prevBtnDisabled,
@@ -92,12 +107,28 @@ const EmblaCarousel = (props) => {
     <div className="embla w-[100vh] h-screen flex flex-col justify-around mx-auto">
       <div className="embla__viewport" ref={emblaRef}>
         <div className="embla__container py-2 z-50 relative px-1 flex gap-4">
-          {slidesall.map((SlideComponent, index) => (
+          {/* {slidesall.map((SlideComponent, index) => (
             <SlideComponent
               key={index}
               opacity={currentSlideIndex === index ? 1 : 0.2}
             />
+          ))} */}
+
+{slides.map((slide, index) => (
+            <div
+              key={index}
+              className="h-full bg-black border-zinc-800 border overflow-hidden rounded-lg embla__slide flex flex-col items-center justify-center p-8"
+              style={{ opacity: currentSlideIndex === index ? 1 : 0.2 }}
+            >
+              <h2 className="text-2xl font-bold text-white mb-4">
+                {slide.content.split(':')[0]}
+              </h2>
+              <p className="text-white/80 text-lg text-center">
+                {slide.content.split(':')[1]}
+              </p>
+            </div>
           ))}
+
         </div>
       </div>
 
