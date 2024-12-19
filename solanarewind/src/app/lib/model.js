@@ -1,7 +1,7 @@
 const express = require('express');
 const { ChatXAI } = require('@langchain/xai');
 const dotenv = require('dotenv');
-
+const axios = require('axios');
 
 dotenv.config();
 
@@ -15,12 +15,21 @@ const llm = new ChatXAI({
     maxRetries: 2,
 });
 
-
 const model = {
     context: null,
+    systemPrompt: `You are an Indian crypto expert but the roaster like the Elon Musk. Analyze the provided wallet data and give a detailed but concise roast of the wallet's activity.
+    Be witty, darker, roasting, fun, and dark humor with no limit but maintain technical accuracy. Do relate it with some Indian memes or blockchain memes. Roast too hard and one-liner concise. Provide in 10 pointers`,
 
-    systemPrompt: `You are an Indian crypto expert but the roaster like the elon musk. Analyze the provided wallet data and give a detailed but concise roast of the wallet's activity. 
-Be witty, darket, roasting, fun and dark humor with no limit but maintain technical accuracy. Do relate it with some indian memes or blockchain memes. Roast to hard and one liner concise. Provide in 10 pointers`,
+    async fetchAndStoreData(walletAddress) {
+        try {
+            const response = await axios.get(`http://localhost:3000/api/final?walletAddress=${walletAddress}`);
+            this.setResponse(response.data);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            throw error;
+        }
+    },
 
     setResponse(data) {
         console.log('Setting data:', data);
@@ -37,18 +46,31 @@ Be witty, darket, roasting, fun and dark humor with no limit but maintain techni
     }
 };
 
+// Health check
 app.get('/health', (req, res) => {
-    res.json({ status: 'OK' });
+    res.json({ status: 'OK', message: 'Model server running' });
 });
 
+// Endpoint to fetch and store wallet data
+app.post('/fetch-wallet/:walletAddress', async (req, res) => {
+    try {
+        const { walletAddress } = req.params;
+        const data = await model.fetchAndStoreData(walletAddress);
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get AI analysis
 app.post('/analyze-wallet', async (req, res) => {
     try {
         const context = model.getContext();
-        
+
         if (!context) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'No wallet data available' 
+            return res.status(400).json({
+                success: false,
+                error: 'No wallet data available'
             });
         }
 
@@ -74,19 +96,23 @@ app.post('/analyze-wallet', async (req, res) => {
     }
 });
 
+// Try different ports if default is in use
+const startServer = (initialPort) => {
+    const server = app.listen(initialPort)
+        .on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.log(`Port ${initialPort} is busy, trying ${initialPort + 1}...`);
+                startServer(initialPort + 1);
+            }
+        })
+        .on('listening', () => {
+            const port = server.address().port;
+            console.log(`Model server running on port ${port}`);
+        });
+};
 
-app.post('/store-data', (req, res) => {
-    try {
-        const context = model.setResponse(req.body);
-        res.json({ success: true, context });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Model server running on port ${PORT}`);
-});
+// Start server with initial port
+const PORT = process.env.MODEL_PORT || 3001;
+startServer(PORT);
 
 module.exports = model;

@@ -6,10 +6,7 @@ export const runtime = 'edge';
 // Utility Functions
 const generateRandomString = (length) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    return Array.from(
-        { length }, 
-        () => chars[Math.floor(Math.random() * chars.length)]
-    ).join('');
+    return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 };
 
 const generateDynamicCookie = () => {
@@ -33,13 +30,10 @@ export async function GET(request) {
     const walletAddress = searchParams.get('walletAddress');
 
     if (!walletAddress) {
-        return NextResponse.json({ 
-            error: 'Wallet address is required' 
-        }, { status: 400 });
+        return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
     }
 
     try {
-        // Generate dynamic cookies
         const dynamicCookies = generateDynamicCookie();
 
         const response = await axios.get(`https://gmgn.ai/api/v1/wallet_holdings/sol/${walletAddress}`, {
@@ -69,111 +63,36 @@ export async function GET(request) {
 
         const holdings = response.data.data.holdings;
 
-        // Utility functions
-        const getTopProfitableTokens = (holdings, count = 5) => {
-            return holdings
-                .map(holding => ({
-                    name: holding.token.symbol,
-                    totalProfit: parseFloat(holding.total_profit),
-                    details: holding
-                }))
-                .sort((a, b) => b.totalProfit - a.totalProfit)
-                .slice(0, count);
-        };
-
-        const getTopLossTokens = (holdings, count = 5) => {
-            return holdings
-                .map(holding => ({
-                    name: holding.token.symbol,
-                    totalLoss: parseFloat(holding.total_profit),
-                    details: holding
-                }))
-                .sort((a, b) => a.totalLoss - b.totalLoss)
-                .slice(0, count);
-        };
-
-        const getTopActiveTokens = (holdings, count = 5) => {
-            return holdings
-                .map(holding => ({
-                    name: holding.token.symbol,
-                    totalActivity: holding.buy_30d + holding.sell_30d,
-                    buyCount: holding.buy_30d,
-                    sellCount: holding.sell_30d,
-                    details: holding
-                }))
-                .sort((a, b) => b.totalActivity - a.totalActivity)
-                .slice(0, count);
-        };
-
-        // Calculate total profit and loss
-        const calculateTotalProfitLoss = (holdings) => {
-            const totalProfit = holdings.reduce((sum, holding) => {
-                return sum + parseFloat(holding.total_profit);
-            }, 0);
-
-            const profitableTokens = holdings.filter(holding => 
-                parseFloat(holding.total_profit) > 0
-            );
-
-            const lossTokens = holdings.filter(holding => 
-                parseFloat(holding.total_profit) < 0
-            );
-
-            return {
-                totalOverallProfit: totalProfit,
-                totalProfitableTokens: profitableTokens.length,
-                totalLossTokens: lossTokens.length,
-                totalProfitAmount: profitableTokens.reduce((sum, holding) => 
-                    sum + parseFloat(holding.total_profit), 0),
-                totalLossAmount: lossTokens.reduce((sum, holding) => 
-                    sum + parseFloat(holding.total_profit), 0)
-            };
-        };
-
-        // Analysis results
-        const analysis = {
-            totalTokensTradedCount: holdings.length,
-            tokenNames: holdings.map(holding => holding.token.symbol),
-            
-            top5ProfitableTokens: getTopProfitableTokens(holdings).map(token => ({
-                name: token.name,
-                totalProfit: token.totalProfit.toFixed(2)
-            })),
-            
-            top5LossTokens: getTopLossTokens(holdings).map(token => ({
-                name: token.name,
-                totalLoss: token.totalLoss.toFixed(2)
-            })),
-            
-            top5ActiveTokens: getTopActiveTokens(holdings).map(token => ({
-                name: token.name,
-                totalActivity: token.totalActivity,
-                buyCount: token.buyCount,
-                sellCount: token.sellCount
-            })),
-            
+        // Process data and format summary
+        const summaryData = {
             mostProfitableToken: {
-                name: getTopProfitableTokens(holdings, 1)[0]?.name,
-                totalProfit: getTopProfitableTokens(holdings, 1)[0]?.totalProfit
+                symbol: holdings[0]?.token?.symbol || 'Unknown',
+                profit: parseFloat(holdings[0]?.total_profit || 0),
+                percentageGain: parseFloat(holdings[0]?.pnl_pct || 0)
             },
             mostLossToken: {
-                name: getTopLossTokens(holdings, 1)[0]?.name,
-                totalLoss: getTopLossTokens(holdings, 1)[0]?.totalLoss
+                symbol: holdings[holdings.length - 1]?.token?.symbol || 'Unknown',
+                loss: parseFloat(holdings[holdings.length - 1]?.total_profit || 0),
+                percentageLoss: parseFloat(holdings[holdings.length - 1]?.pnl_pct || 0)
             },
-            mostActiveToken: {
-                name: getTopActiveTokens(holdings, 1)[0]?.name,
-                totalActivity: getTopActiveTokens(holdings, 1)[0]?.totalActivity
-            },
-            
-            // New total profit/loss summary
-            totalProfitLossSummary: calculateTotalProfitLoss(holdings)
+            totalProfitLossSummary: {
+                totalProfit: holdings.reduce((sum, holding) => {
+                    const profit = parseFloat(holding.total_profit || 0);
+                    return profit > 0 ? sum + profit : sum;
+                }, 0),
+                totalLoss: Math.abs(holdings.reduce((sum, holding) => {
+                    const profit = parseFloat(holding.total_profit || 0);
+                    return profit < 0 ? sum + profit : sum;
+                }, 0)),
+                netProfitLoss: holdings.reduce((sum, holding) => {
+                    return sum + parseFloat(holding.total_profit || 0);
+                }, 0)
+            }
         };
 
-        return NextResponse.json(analysis);
+        return NextResponse.json(summaryData);
     } catch (error) {
-        console.error('Error fetching token data:', error);
-        return NextResponse.json({ 
-            error: error.message || 'Unknown error occurred',
-        }, { status: 500 });
+        console.error('Error fetching summary data:', error);
+        return NextResponse.json({ error: error.message || 'Failed to fetch summary data' }, { status: 500 });
     }
 }

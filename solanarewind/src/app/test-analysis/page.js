@@ -13,7 +13,7 @@ export default function TestAnalysisPage() {
         setError(null);
         try {
  
-            const walletResponse = await fetch('/api/final?walletAddress=123'); // Add Here
+            const walletResponse = await fetch('/api/final?walletAddress=CZ3u1cVyApTCXsfgbBwhBYeVDbi17PKYLmfuVh3Z9ps9'); // Add Here
             const walletData = await walletResponse.json();
 
             model.setResponse(walletData);

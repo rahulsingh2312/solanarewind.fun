@@ -1,93 +1,97 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
-import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
-import { publicKey } from '@metaplex-foundation/umi';
+import { NextResponse } from 'next/server';
+import axios from 'axios';
 
 export const runtime = 'edge';
 
+// Utility Functions
+const generateRandomString = (length) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+};
+
+const generateDynamicCookie = () => {
+    const timestamp = Date.now();
+    return {
+        '_ga': `GA1.1.${Math.floor(Math.random() * 1000000000)}.${timestamp}`,
+        '_ga_0XM0LYXGC8': `GS1.1.1.${timestamp}.1.1.${timestamp}.0.0.0`,
+        'cf_clearance': `${generateRandomString(32)}-${timestamp}-1.2.1.1-${generateRandomString(40)}`,
+        '__cf_bm': `${generateRandomString(32)}-${timestamp}-1.0.1.1-${generateRandomString(40)}`
+    };
+};
+
+const cookieToHeaderString = (cookieObj) => {
+    return Object.entries(cookieObj)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('; ');
+};
+
 export async function GET(request) {
-  // Extract wallet address from query parameters
-  const searchParams = request.nextUrl.searchParams;
-  const walletAddress = searchParams.get('walletAddress');
+    const { searchParams } = new URL(request.url);
+    const walletAddress = searchParams.get('walletAddress');
 
-  // Validate wallet address
-  if (!walletAddress) {
-    return NextResponse.json(
-      { error: 'Wallet address is required' }, 
-      { status: 400 }
-    );
-  }
-
-  try {
-    // Initialize Umi with Helius RPC
-    const umi = createUmi('https://mainnet.helius-rpc.com/?api-key=fb5ef076-69e7-4d96-82d8-2237c13aef7a').use(dasApi());
-
-    // Fetch assets for the specified wallet
-    const assets = await umi.rpc.getAssetsByOwner({
-      owner: publicKey(walletAddress),
-    });
-
-    // Transform and analyze assets
-    const totalNFTs = assets.items.length;
-
-    // 2. Check if Superteam Member
-    const isSuperteamMember = assets.items.some(asset => 
-      /superteam member/i.test(asset.content?.metadata?.name || '')
-    );
-
-    // 3. Extract name and XP from Superteam Member NFT
-    let name = 'N/A';
-    let xp = 0;
-    const superteamNFT = assets.items.find(asset => 
-      /superteam member/i.test(asset.content?.metadata?.name || '')
-    );
-    
-    if (superteamNFT && superteamNFT.content?.links?.image) {
-      const nameMatch = superteamNFT.content.links.image.match(/name=([^&]+)/);
-      const xpMatch = superteamNFT.content.links.image.match(/xp=(\d+)/);
-      
-      name = nameMatch ? nameMatch[1] : 'N/A';
-      xp = xpMatch ? parseInt(xpMatch[1]) : 0;
+    if (!walletAddress) {
+        return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
     }
 
-    // 4 & 5. Check and Count Ecosystem Calls
-    const ecosystemCalls = assets.items.filter(asset => 
-      /ecosystem call/i.test(asset.content?.metadata?.name || '')
-    );
-    const ecosystemCallsAttended = ecosystemCalls.length > 0;
-    const ecosystemCallMonths = ecosystemCalls.map(call => {
-      const monthMatch = call.content?.metadata?.name?.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i);
-      return monthMatch ? monthMatch[1] : 'Unknown';
-    });
+    try {
+        const dynamicCookies = generateDynamicCookie();
 
-    // Transform assets into a more frontend-friendly format
-    const nftDetails = assets.items.map((asset) => ({
-      id: asset.id,
-      title: asset.content?.metadata?.name || 'Untitled NFT',
-      description: asset.content?.metadata?.description || 'No description',
-      imageUrl: asset.content?.links?.image || '',
-    }));
+        // First get NFT holdings from GMGN
+        const nftResponse = await axios.get(`https://gmgn.ai/api/v1/wallet_nfts/sol/${walletAddress}`, {
+            headers: {
+                'authority': 'gmgn.ai',
+                'accept': 'application/json, text/plain, */*',
+                'accept-encoding': 'gzip, deflate, br, zstd',
+                'accept-language': 'en-US,en;q=0.9',
+                'dnt': '1',
+                'priority': 'u=1, i',
+                'referer': `https://gmgn.ai/sol/address/${walletAddress}`,
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'cookie': cookieToHeaderString(dynamicCookies),
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
 
-    // Return comprehensive NFT analysis
-    return NextResponse.json({
-      totalNFTs,
-      isSuperteamMember,
-      superteamMemberDetails: {
-        name,
-        xp
-      },
-      ecosystemCallsAttended,
-      ecosystemCallMonths,
-      nfts: nftDetails
-    });
-  } catch (error) {
-    console.error('Error fetching NFTs:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch NFTs', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
-      }, 
-      { status: 500 }
-    );
-  }
+        const nfts = nftResponse.data.data.nfts;
+
+        // Process NFTs to calculate statistics
+        const collections = {};
+        nfts.forEach(nft => {
+            const collectionName = nft.collection?.name || 'Unknown Collection';
+            if (!collections[collectionName]) {
+                collections[collectionName] = {
+                    count: 0,
+                    floorPrice: parseFloat(nft.floor_price || 0),
+                    totalValue: 0
+                };
+            }
+            collections[collectionName].count++;
+            collections[collectionName].totalValue += parseFloat(nft.price || 0);
+        });
+
+        return NextResponse.json({
+            totalNFTs: nfts.length,
+            collections: Object.entries(collections).map(([name, data]) => ({
+                name,
+                count: data.count,
+                floorPrice: data.floorPrice,
+                totalValue: data.totalValue
+            })),
+            details: nfts.map(nft => ({
+                name: nft.name || 'Unnamed NFT',
+                collection: nft.collection?.name || 'Unknown Collection',
+                price: parseFloat(nft.price || 0),
+                lastSale: parseFloat(nft.last_sale_price || 0)
+            }))
+        });
+
+    } catch (error) {
+        console.error('Error fetching NFTs:', error);
+        return NextResponse.json({ 
+            error: 'Failed to fetch NFTs', 
+            details: error.message 
+        }, { status: 500 });
+    }
 }

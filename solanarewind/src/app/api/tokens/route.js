@@ -1,126 +1,81 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
-import { publicKey } from "@metaplex-foundation/umi";
-import { fetchAllDigitalAssetWithTokenByOwner } from "@metaplex-foundation/mpl-token-metadata";
+import { NextResponse } from 'next/server';
 import axios from 'axios';
-export const runtime = 'edge'; 
 
-// Utility function for fee tracking (similar to the original implementation)
-class SolanaFeeTracker {
-    constructor(rpcUrl = 'https://mainnet.helius-rpc.com/?api-key=fb5ef076-69e7-4d96-82d8-2237c13aef7a') {
-        this.RPC_URL = rpcUrl;
-    }
+export const runtime = 'edge';
 
-    async getTransactionHistory(walletAddress) {
-        try {
-            const currentTimestamp = Date.now();
-            const oneYearAgo = Math.floor((currentTimestamp - (365 * 24 * 60 * 60 * 1000)) / 1000);
-
-            const response = await axios.post(this.RPC_URL, {
-                jsonrpc: "2.0",
-                id: 1,
-                method: "getSignaturesForAddress",
-                params: [
-                    walletAddress,
-                    { 
-                        limit: 1000, 
-                        before: null, 
-                        after: oneYearAgo 
-                    }
-                ]
-            });
-
-            const signatures = response.data.result || [];
-
-            // Sort signatures by timestamp
-            signatures.sort((a, b) => a.blockTime - b.blockTime);
-
-            return {
-                totalTransactions: signatures.length,
-                firstTransaction: signatures.length > 0 ? {
-                    signature: signatures[0].signature,
-                    timestamp: new Date(signatures[0].blockTime * 1000).toLocaleString(),
-                    fee: signatures[0].fee
-                } : null,
-                lastTransaction: signatures.length > 0 ? {
-                    signature: signatures[signatures.length - 1].signature,
-                    timestamp: new Date(signatures[signatures.length - 1].blockTime * 1000).toLocaleString(),
-                    fee: signatures[signatures.length - 1].fee
-                } : null
-            };
-        } catch (error) {
-            console.error('Transaction tracking error:', error);
-            return null;
-        }
-    }
-}
-
-// Helper function to extract token details
-const extractTokenDetails = (tokens) => {
-    return tokens.map(token => ({
-        name: token.metadata.name || 'Unnamed Token',
-        symbol: token.metadata.symbol || 'N/A',
-        uri: token.metadata.uri || '',
-        
-    }));
-};
+const generateHeaders = () => ({
+    'authority': 'gmgn.ai',
+    'accept': 'application/json, text/plain, */*',
+    'accept-language': 'en-US,en;q=0.9',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'referer': 'https://gmgn.ai/',
+    'origin': 'https://gmgn.ai',
+    'sec-fetch-site': 'same-origin',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-dest': 'empty',
+});
 
 export async function GET(request) {
-    // Extract wallet address from query parameters
-    const searchParams = request.nextUrl.searchParams;
+    const { searchParams } = new URL(request.url);
     const walletAddress = searchParams.get('walletAddress');
-    const apiType = searchParams.get('type');
+    const type = searchParams.get('type');
 
-    // Validate wallet address
     if (!walletAddress) {
-        return NextResponse.json(
-            { error: 'Wallet address is required' }, 
-            { status: 400 }
-        );
+        return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
     }
 
     try {
-        // Initialize Umi with Helius RPC (replace with your API key)
-        const umi = createUmi('https://mainnet.helius-rpc.com/?api-key=fb5ef076-69e7-4d96-82d8-2237c13aef7a');
-        const ownerPublicKey = publicKey(walletAddress);
-
-        // Handle different API types
-        if (apiType === 'tokens') {
-            // Fetch all digital assets (tokens/NFTs)
-            const allTokens = await fetchAllDigitalAssetWithTokenByOwner(umi, ownerPublicKey);
-            
-            // Extract token details
-            const tokenDetails = extractTokenDetails(allTokens);
-
+        if (type === 'tokens') {
+            // Mock data for tokens
             return NextResponse.json({
-                totalTokens: allTokens.length,
-                tokens: tokenDetails
+                totalTokens: 2,
+                holdings: [
+                    {
+                        symbol: 'SOL',
+                        balance: 10.5,
+                        value: 1050.0,
+                        percentage: 70
+                    },
+                    {
+                        symbol: 'BONK',
+                        balance: 1000000,
+                        value: 450.0,
+                        percentage: 30
+                    }
+                ]
             });
-        } else if (apiType === 'transactions') {
-            // Initialize fee tracker
-            const feeTracker = new SolanaFeeTracker();
-            
-            // Fetch transaction history
-            const transactionSummary = await feeTracker.getTransactionHistory(walletAddress);
-
-            return NextResponse.json(transactionSummary || { 
-                error: 'No transaction data available' 
+        } else if (type === 'transactions') {
+            // Mock data for transactions
+            return NextResponse.json({
+                totalTransactions: 25,
+                firstTransaction: {
+                    hash: '5UYkT...',
+                    timestamp: '2023-01-01T00:00:00Z',
+                    value: 1.5
+                },
+                lastTransaction: {
+                    hash: '7RtPq...',
+                    timestamp: '2024-12-19T00:00:00Z',
+                    value: 0.5
+                },
+                recentTransactions: [
+                    {
+                        hash: '7RtPq...',
+                        timestamp: '2024-12-19T00:00:00Z',
+                        type: 'SWAP',
+                        value: 0.5,
+                        status: 'SUCCESS'
+                    }
+                ]
             });
-        } else {
-            return NextResponse.json(
-                { error: 'Invalid API type. Use "tokens" or "transactions"' }, 
-                { status: 400 }
-            );
         }
 
+        return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 });
     } catch (error) {
-        console.error('API Error:', error);
-        return NextResponse.json(
-            { 
-                error: 'Failed to fetch data', 
-                details: error instanceof Error ? error.message : 'Unknown error' 
-            }, 
-            { status: 500 }
-        );
+        console.error('Error fetching token data:', error);
+        return NextResponse.json({
+            error: 'Failed to fetch token data',
+            details: error.message
+        }, { status: 500 });
     }
 }
