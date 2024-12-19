@@ -1,3 +1,5 @@
+export const maxDuration = 60; 
+
 
 import { ChatXAI } from "@langchain/xai";
 import dotenv from 'dotenv';
@@ -27,7 +29,7 @@ export async function POST(req) {
 
     // Fetch wallet summary from the external API
     const apiResponse = await fetch(
-      `http://localhost:3000/api/final?walletAddress=${walletAddress}`
+      `https://solanarewind.vercel.app/api/final?walletAddress=${walletAddress}`
     );
 
     if (!apiResponse.ok) {

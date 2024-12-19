@@ -1,3 +1,5 @@
+export const maxDuration = 60; 
+
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
@@ -10,10 +12,10 @@ export async function GET(request) {
   }
 
   const endpoints = {
-    summary: `http://localhost:3000/api/summary?walletAddress=${walletAddress}`,
-    nfts: `http://localhost:3000/api/nfts?walletAddress=${walletAddress}`,
-    tokensTransactions: `http://localhost:3000/api/tokens?walletAddress=${walletAddress}&type=transactions`,
-    tokensOwned: `http://localhost:3000/api/tokens?walletAddress=${walletAddress}&type=tokens`
+    summary: `https://solanarewind.vercel.app/api/summary?walletAddress=${walletAddress}`,
+    nfts: `https://solanarewind.vercel.app/api/nfts?walletAddress=${walletAddress}`,
+    tokensTransactions: `https://solanarewind.vercel.app/api/tokens?walletAddress=${walletAddress}&type=transactions`,
+    tokensOwned: `https://solanarewind.vercel.app/api/tokens?walletAddress=${walletAddress}&type=tokens`
   };
 
   try {

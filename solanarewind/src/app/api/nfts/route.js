@@ -1,3 +1,5 @@
+export const maxDuration = 60; 
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
