@@ -475,6 +475,7 @@ const Slide5 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-black border rounded-lg embla__slide"
       style={{ opacity }}
     >
+      <img src="https://c.tenor.com/CNI1fSM1XSoAAAAd/tenor.gif" alt="" />
       <h1>{title}</h1>
       {description}
     </div>
@@ -502,8 +503,8 @@ const Slide6 = ({ opacity = 0.5, slideData }) => {
         className="giphy-embed"
         allowFullScreen
       ></iframe>
-      <h1 className="font-bold text-5xl mb-2 mt-4"> {title}</h1>
-      <p className="text-white/80 text-md"> {description}</p>
+      <h1 className="font-bold text-5xl mb-2 mt-4 text-black"> {title}</h1>
+      <p className="text-black/80 text-md"> {description}</p>
       <img
         src="./bluebars.png"
         className="fixed -bottom-20 rotate-180  "
