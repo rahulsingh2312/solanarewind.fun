@@ -56,13 +56,12 @@ const EmblaCarousel = (props) => {
           );
           console.log("API response:", response.data.data.bagholder); // Debugging
           const { bagholder } = response.data.data.bagholder;
-          if (bagholder) {
-            setTokenData({
-              symbol: bagholder.symbol,
-              icon: bagholder.icon,
-            });
-            console.log(tokenData);
-          }
+
+          setTokenData({
+            symbol: response?.data.data.bagholder?.symbol,
+            icon: response?.data.data.bagholder?.icon,
+          });
+          console.log(tokenData);
         } catch (error) {
           console.error("Error fetching token data:", error);
         }
