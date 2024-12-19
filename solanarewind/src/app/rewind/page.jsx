@@ -67,7 +67,7 @@ const Page = () => {
   return (
     <div className="h-screen w-screen">
       <div className="md:hidden">
-        <EmblaCarousel slides={SLIDES} options={OPTIONS} />
+        <EmblaCarousel slides2={SLIDES} options={OPTIONS} />
       </div>
       <div className="max-md:hidden">
         <div className="list-wrapper px-16 z-40" style={{ overflow: "hidden" }}>

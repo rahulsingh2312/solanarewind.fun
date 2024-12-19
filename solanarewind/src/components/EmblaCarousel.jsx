@@ -17,7 +17,7 @@ import {
 import { FaPause, FaPlay } from "react-icons/fa";
 
 const EmblaCarousel = (props) => {
-  const { options } = props;
+  const { slides2, options } = props;
   const { publicKey } = useWallet();
   const [slides, setSlides] = useState([]);
   const progressNode = useRef(null);
@@ -47,6 +47,7 @@ const EmblaCarousel = (props) => {
     }
   }, [publicKey]);
 
+  const [topToken, setTopToken] = useState([]);
   useEffect(() => {
     const fetchTokenData = async () => {
       if (publicKey) {
@@ -61,6 +62,8 @@ const EmblaCarousel = (props) => {
             symbol: response?.data.data.bagholder?.symbol,
             icon: response?.data.data.bagholder?.icon,
           });
+          setTopToken(response?.data?.data?.currentHoldings?.top_tokens || []);
+          console.log(topToken);
           console.log(tokenData);
         } catch (error) {
           console.error("Error fetching token data:", error);
@@ -110,7 +113,7 @@ const EmblaCarousel = (props) => {
     Slide1,
     (props) => <Slide2 {...props} slideData={slides[0]} />,
     (props) => <Slide3 {...props} notslide={tokenData} />,
-    (props) => <Slide4 {...props} slideData={slides[2]} />,
+    (props) => <Slide4 {...props} slideData={slides[2]} topToken={topToken} />,
     (props) => <Slide5 {...props} slideData={slides[3]} />,
     (props) => <Slide6 {...props} slideData={slides[4]} />,
     (props) => <Slide7 {...props} slideData={slides[5]} />,
@@ -193,9 +196,7 @@ const EmblaCarousel = (props) => {
         </div>
 
         <div
-          className={`embla__progress`.concat(
-            showAutoplayProgress ? "" : " embla__progress--hidden"
-          )}
+          className={`embla__progress`.concat(showAutoplayProgress ? "" : "")}
         >
           <div className="embla__progress__bar" ref={progressNode} />
         </div>
@@ -328,11 +329,10 @@ const Slide3 = ({ opacity = 0.5, notslide }) => {
   );
 };
 
-const Slide4 = ({ opacity = 0.5, slideData }) => {
+const Slide4 = ({ opacity = 0.5, slideData, topToken }) => {
   const [rawTitle, rawDescription] = (slideData?.content || ":").split(
     /:(.*)/s
   );
-  // Remove leading '**' from title and description if they exist
   const title = rawTitle?.replace(/^\*\*/, "").trim();
   const description = rawDescription?.replace(/^\*\*/, "").trim();
 
@@ -347,7 +347,6 @@ const Slide4 = ({ opacity = 0.5, slideData }) => {
         tl.current.play();
       }
 
-      // Animate the winnerTable image
       gsap.to(winnerTableRef.current, {
         opacity: 1,
         y: -50,
@@ -372,15 +371,15 @@ const Slide4 = ({ opacity = 0.5, slideData }) => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      const boxes = gsap.utils.toArray(".box1");
+      const boxes = gsap.utils.toArray(".token-box");
 
-      // Initialize starting positions
       gsap.set(boxes, { clearProps: "all" });
 
       tl.current = gsap
         .timeline({ paused: true })
         .to(boxes[0], {
           x: 120,
+          y: 10,
           rotation: 360,
           duration: 1.5,
         })
@@ -397,67 +396,73 @@ const Slide4 = ({ opacity = 0.5, slideData }) => {
         .to(
           boxes[2],
           {
-            y: -120,
+            y: -150,
             duration: 1.5,
           },
           "<"
         );
     }, container);
 
-    // Initialize the winnerTable with hidden state
     gsap.set(winnerTableRef.current, { opacity: 0, y: 0 });
 
-    return () => ctx.revert(); // Cleanup
+    return () => ctx.revert();
   }, []);
 
   return (
-    <div className="h-[90vh] w-[440px] bg-[#00ADF1] border rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900 relative">
+    <div
+      className="h-full w-[440px] bg-[#00ADF1] border rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900 relative"
+      style={{ opacity }}
+    >
       <img
-        src="./redBar.png"
+        src="/redBar.png"
         alt=""
         className="absolute top-0 mix-blend-color-dodge select-none"
+        draggable="false"
       />
+
       <img
         ref={winnerTableRef}
-        src="./winnerTable.png"
+        src="/winnerTable.png"
         className="absolute -bottom-12 select-none"
-        alt=""
+        alt="Winner podium"
+        draggable="false"
       />
+
+      <div className="absolute top-32 text-center">
+        <h2 className="text-2xl font-semibold text-white mb-2">{title}</h2>
+        <p className="text-white/80">{description}</p>
+      </div>
+
+      <div
+        ref={container}
+        className="relative flex justify-center items-center h-48"
+      >
+        <div className="flex flex-col gap-8">
+          {topToken?.map((token, index) => (
+            <div
+              key={token.address}
+              className="token-box w-20 h-20 bg-white rounded-full shadow-lg flex items-center justify-center border-4 border-white overflow-hidden"
+            >
+              {token.icon ? (
+                <img
+                  src={token.icon}
+                  alt={token.symbol || "Token"}
+                  className="w-16 h-16 object-contain"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse" />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       <button
         onClick={toggleTimeline}
-        className="absolute z-50 bottom-12 bg-white text-black rounded-full px-4 py-2 hover:bg-gray-500 shadow-xl border border-gray-400"
+        className="absolute bottom-12 z-10 bg-white text-black rounded-full px-6 py-2 font-medium hover:bg-gray-100 transition-colors shadow-xl border border-gray-200"
       >
         {isRevealed.current ? "Reset Animation" : "Reveal The Winner"}
       </button>
-      <h2 className="absolute top-32 text-xl font-medium">
-        Press the Button to reveal the winner!
-      </h2>
-
-      <div ref={container} className="relative">
-        <div className="boxes-container">
-          <div className="box1 gradient-blue border shadow-2xl rounded-full w-20 h-20">
-            <img
-              className="w-full h-full object-cover"
-              src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
-              alt="USDC"
-            />
-          </div>
-          <div className="box1 gradient-blue border shadow-2xl overflow-hidden w-20 h-20">
-            <img
-              src="https://techpoint.africa/crypto/wp-content/uploads/2024/11/Turbo-surges-as-top-meme-coin.jpg"
-              className="w-full h-full object-cover"
-              alt="Turbo"
-            />
-          </div>
-          <div className="box1 gradient-blue border shadow-2xl overflow-hidden w-20 h-20">
-            <img
-              src="https://static.news.bitcoin.com/wp-content/uploads/2023/04/pepes.jpg"
-              className="w-full h-full object-cover"
-              alt="Pepe"
-            />
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
@@ -469,15 +474,19 @@ const Slide5 = ({ opacity = 0.5, slideData }) => {
   // Remove leading '**' from title and description if they exist
   const title = rawTitle?.replace(/^\*\*/, "").trim();
   const description = rawDescription?.replace(/^\*\*/, "").trim();
-
+  console.log(slideData);
   return (
     <div
-      className="h-full bg-black border rounded-lg embla__slide"
+      className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-      <img src="https://c.tenor.com/CNI1fSM1XSoAAAAd/tenor.gif" alt="" />
-      <h1>{title}</h1>
-      {description}
+      <img src="./greenbars.png" className="fixed top-0" alt="" />
+      <div className="h-40 w-40 bg-white rounded-xl flex items-center justify-center overflow-hidden ">
+        <img src="https://c.tenor.com/CNI1fSM1XSoAAAAd/tenor.gif" alt="" />
+      </div>
+      <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
+      <p className="text-white/80 text-md">{description}</p>
+      <img src="./greenbars.png" className="fixed bottom-0 rotate-180" alt="" />
     </div>
   );
 };
@@ -492,17 +501,16 @@ const Slide6 = ({ opacity = 0.5, slideData }) => {
 
   return (
     <div
-      className="h-full bg-[#F50000] border rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
+      className="h-full bg-[#F50000] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
       style={{ opacity }}
     >
       <img src="./bluebars.png" className="fixed -top-20" alt="" />
-      <iframe
-        src="https://giphy.com/embed/wr7oA0rSjnWuiLJOY5"
-        width="200"
-        height="200"
-        className="giphy-embed"
-        allowFullScreen
-      ></iframe>
+      <img
+        src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYzZtMndqYzNvazd1eG94Zmd2bHl1NDh6dXVpaHMyb2J2enJteWJvMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wr7oA0rSjnWuiLJOY5/giphy.gif
+"
+        alt=""
+        className="h-40 w-40 rounded-xl shadow-xl"
+      />
       <h1 className="font-bold text-5xl mb-2 mt-4 text-black"> {title}</h1>
       <p className="text-black/80 text-md"> {description}</p>
       <img
@@ -523,11 +531,17 @@ const Slide7 = ({ opacity = 0.5, slideData }) => {
 
   return (
     <div
-      className="h-full bg-black border rounded-lg embla__slide"
+      className="h-full bg-black border border-gray-900 overflow-hidden flex flex-col items-center justify-center rounded-lg embla__slide"
       style={{ opacity }}
     >
-      <h1>{title}</h1>
-      {description}
+      <img src="./yellowbars.png" className="fixed -top-20  " alt="" />
+      <h1 className="font-bold text-5xl mb-2 mt-4 text-white ">{title}</h1>
+      <p className="text-white/80 text-md max-w-80">{description}</p>
+      <img
+        src="./yellowbars.png"
+        className="fixed -bottom-20 rotate-180  "
+        alt=""
+      />
     </div>
   );
 };
@@ -542,11 +556,14 @@ const Slide8 = ({ opacity = 0.5, slideData }) => {
 
   return (
     <div
-      className="h-full bg-black border rounded-lg embla__slide"
+      className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-      <h1> {title}</h1>
-      <h1> {description}</h1>
+      <img src="./greenbars.png" className="fixed top-0" alt="" />
+
+      <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
+      <p className="text-white/80 text-md">{description}</p>
+      <img src="./greenbars.png" className="fixed bottom-0 rotate-180" alt="" />
     </div>
   );
 };
@@ -560,11 +577,23 @@ const Slide9 = ({ opacity = 0.5, slideData }) => {
 
   return (
     <div
-      className="h-full bg-black border rounded-lg embla__slide"
+      className="h-full bg-[#00f500] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
       style={{ opacity }}
     >
-      <h1>{title}</h1>
-      {description}
+      <img src="./bluebars.png" className="fixed -top-20" alt="" />
+      <img
+        src="https://s3.coinmarketcap.com/static-gravity/image/4dc5810324c74688a5a1b805f7506ec5.jpg
+"
+        alt=""
+        className="h-40 w-40 rounded-xl shadow-xl"
+      />
+      <h1 className="font-bold text-5xl mb-2 mt-4 text-black"> {title}</h1>
+      <p className="text-black/80 text-md"> {description}</p>
+      <img
+        src="./bluebars.png"
+        className="fixed -bottom-20 rotate-180  "
+        alt=""
+      />
     </div>
   );
 };
@@ -579,11 +608,14 @@ const Slide10 = ({ opacity = 0.5, slideData }) => {
 
   return (
     <div
-      className="h-full bg-black border rounded-lg embla__slide"
+      className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-      <h1> {title}</h1>
-      <h1> {description}</h1>
+      <img src="./greenbars.png" className="fixed top-0" alt="" />
+
+      <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
+      <p className="text-white/80 text-md">{description}</p>
+      <img src="./greenbars.png" className="fixed bottom-0 rotate-180" alt="" />
     </div>
   );
 };
@@ -592,11 +624,14 @@ const Slide11 = ({ opacity = 0.5, slideData }) => {
 
   return (
     <div
-      className="h-full bg-black border rounded-lg embla__slide"
+      className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-      <h1>{title}</h1>
-      {description}
+      <img src="./bluebars.png" className="fixed top-0" alt="" />
+
+      <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
+      <p className="text-white/80 text-md">{description}</p>
+      <img src="./bluebars.png" className="fixed bottom-0 rotate-180" alt="" />
     </div>
   );
 };
