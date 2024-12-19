@@ -96,7 +96,7 @@ export const TransitionLink = ({ children, href, ...props }) => {
         SystemProgram.transfer({
           fromPubkey: publicKey,
           toPubkey: new PublicKey("aiUMLwsAhMA7iL8DdGvXNzpCru76ne1GYtyL2ndm1oe"),
-          lamports: 0.01 * LAMPORTS_PER_SOL
+          lamports: 0.005 * LAMPORTS_PER_SOL
         })
       );
 
