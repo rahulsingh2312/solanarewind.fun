@@ -1,7 +1,7 @@
-'use client'
+"use client";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-import html2canvas from 'html2canvas';
+import html2canvas from "html2canvas";
 import React, { useState, useMemo, useEffect } from "react";
 import Starfield from "../../components/starField";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
@@ -35,7 +35,7 @@ const firebaseConfig = {
   storageBucket: "emoji-buy.firebasestorage.app",
   messagingSenderId: "329260816313",
   appId: "1:329260816313:web:34527cb53f22a512254868",
-  measurementId: "G-D654LZE41V"
+  measurementId: "G-D654LZE41V",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -72,7 +72,7 @@ const Page = () => {
         try {
           const docRef = doc(db, "walletData", publicKey.toString());
           const docSnap = await getDoc(docRef);
-console.log(docSnap.data().analysis , "hi");
+          console.log(docSnap.data().analysis, "hi");
           if (docSnap.exists()) {
             const analysis = docSnap.data().analysis;
             const analysisPoints = JSON.parse(analysis).split("\n\n");
@@ -598,14 +598,14 @@ const Slide11 = ({ slideData }) => {
     </div>
   );
 };
-const Slide12 = ({ slideData , slides }) => {
+const Slide12 = ({ slideData, slides }) => {
   // Function to take screenshot and share
   const handleShare = async () => {
     try {
       // Take screenshot using html2canvas
-      const slideElement = document.querySelector('#roast-slide');
+      const slideElement = document.querySelector("#roast-slide");
       const canvas = await html2canvas(slideElement);
-      const screenshotUrl = canvas.toDataURL('image/png');
+      const screenshotUrl = canvas.toDataURL("image/png");
 
       // Convert base64 to blob
       const response = await fetch(screenshotUrl);
@@ -613,69 +613,82 @@ const Slide12 = ({ slideData , slides }) => {
 
       // Create FormData to send to Twitter
       const formData = new FormData();
-      formData.append('media', blob, 'screenshot.png');
+      formData.append("media", blob, "screenshot.png");
 
       const text = "bruh solanarewind.fun burned me 🔥";
       const url = "https://solanarewind.fun";
-      const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-      window.open(shareUrl, '_blank');
+      const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        text
+      )}&url=${encodeURIComponent(url)}`;
+      window.open(shareUrl, "_blank");
     } catch (error) {
-      console.error('Error sharing:', error);
+      console.error("Error sharing:", error);
     }
   };
 
   return (
-    <div className="h-[90vh] bg-[#] w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
+    <div className="h-[90vh] bg-black w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
       <img
         src="./bluehalfbars.png"
-        className="fixed -top-6 -left-6 h-2/5 animate-pulse select-none"
+        className="fixed -top-6 -left-6 h-1/3 animate-pulse select-none"
         draggable="false"
         alt=""
       />
-      <div className="text-center w-full px-6">
-        <h1 className="font-semibold text-4xl mb-6 text-white">
-          SOUL burning roasts 🔥🔥
+      <div className="text-center w-full px-6 z-50">
+        <h1 className="text-xl mb-6 text-white">
+          "You've got more USDC than a money hoarder at a Diwali sale. Congrats,
+          you're the proud owner of the most stable 'asset' in the crypto world
+          – literally, it's as exciting as watching paint dry."
         </h1>
-        
+        <img
+          src="https://www.pngall.com/wp-content/uploads/10/Solana-Crypto-Logo-PNG-File.png"
+          alt=""
+          className="h-32 mx-auto rounded-full border-4 "
+        />
+
         <div className="">
           {/* Display content from slides 5 and 6 with ellipsis */}
           <div className="backdrop-blur-sm rounded-xl p-2">
-            <p className="text-white/80 text-xl">
-              {slides?.[4]?.content}
-            </p>
+            <p className="text-white/80 text-xl">{slides?.[4]?.content}</p>
           </div>
-          
+
           <div className=" backdrop-blur-sm rounded-xl p-2 ">
             <p className="text-white/80 text-xl">
-              {slides?.[5]?.content} ..................... 
+              {slides?.[5]?.content}
               {/* <br /> get urs on solanarewind.fun */}
             </p>
           </div>
+        </div>
 
-          
+        <div className="flex justify-between items-start">
+          <ul className="text-base font-medium text-white/60 flex flex-col gap-2">
+            <h1 className="font-bold text-xl text-white">Top Coins</h1>
+            <li>Solana</li>
+            <li>Rizzmas</li>
+            <li>USDC</li>
+          </ul>
+          <ul className="text-base font-medium text-white/60">
+            <h1 className="font-bold text-xl text-white">Top Coins</h1>
+            <li>Solana</li>
+          </ul>
         </div>
 
         <button
           onClick={handleShare}
           className="mt-8 bg-[#1DA1F2] text-white px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200 mx-auto"
         >
-          <svg
-            className="w-5 h-5"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
           </svg>
           <span className="font-medium">Share on X</span>
         </button>
         <img
-        src="./bluehalfbars.png"
-        className="fixed -bottom-6 rotate-180 -right-6 h-2/5 animate-pulse select-none"
-        draggable="false"
-        alt=""
-      />
-    </div>
+          src="./bluehalfbars.png"
+          className="fixed -bottom-6 rotate-180 -right-6 h-1/3 animate-pulse select-none"
+          draggable="false"
+          alt=""
+        />
+      </div>
     </div>
   );
 };
-
