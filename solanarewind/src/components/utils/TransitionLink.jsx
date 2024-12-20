@@ -4,29 +4,39 @@ import { useRouter } from "next/navigation";
 import { Connection } from '@solana/web3.js';
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import Starfield from "../starField"; // Adjust based on export type
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import Starfield from "../starField";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAQqa0KjFo9OBH95G03fsTGNjUbEoU5JbA",
+  authDomain: "emoji-buy.firebaseapp.com",
+  projectId: "emoji-buy",
+  storageBucket: "emoji-buy.firebasestorage.app",
+  messagingSenderId: "329260816313",
+  appId: "1:329260816313:web:34527cb53f22a512254868",
+  measurementId: "G-D654LZE41V"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const cleanAnalysisText = (analysisText) => {
   return analysisText
-    // Remove excess asterisks and clean number formatting
     .replace(/\*\*/g, '')
-    // Clean up point numbers and formatting
     .replace(/^\d+\.\s+/gm, '')
-    // Remove any leftover markdown symbols
     .replace(/\[|\]/g, '')
-    // Clean up any double spaces
     .replace(/\s+/g, ' ')
-    // Clean up any extra newlines
     .trim();
 };
-// LoadingScreen.js
+
 const LoadingScreen = () => {
   return (
     <div className="fixed inset-0 bg-[#0B0C0E] flex items-center justify-center z-50">
       <div className="flex flex-col items-center gap-8">
         <div className="relative w-32 h-32">
-          {/* Outer ring */}
           <div className="absolute inset-0 border-4 border-purple-500/30 rounded-full"></div>
-          {/* Spinning ring */}
           <div className="absolute inset-0 border-4 border-t-purple-500 rounded-full animate-spin"></div>
         </div>
         <div className="text-white text-2xl font-medium animate-pulse">
@@ -45,7 +55,6 @@ const LoadingScreen = () => {
   );
 };
 
-// TransitionLink.js
 export const TransitionLink = ({ children, href, ...props }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -68,6 +77,27 @@ export const TransitionLink = ({ children, href, ...props }) => {
     }
   };
 
+  const checkExistingData = async (walletAddress) => {
+    try {
+      const docRef = doc(db, "walletData", walletAddress);
+      const docSnap = await getDoc(docRef);
+      return docSnap.exists() ? docSnap.data() : null;
+    } catch (error) {
+      console.error('Failed to check existing data:', error);
+      throw error;
+    }
+  };
+
+  const saveDataToFirestore = async (walletAddress, data) => {
+    try {
+      const docRef = doc(db, "walletData", walletAddress);
+      await setDoc(docRef, { analysis: data });
+    } catch (error) {
+      console.error('Failed to save data to Firestore:', error);
+      throw error;
+    }
+  };
+
   const handleTransition = async (e) => {
     e.preventDefault();
 
@@ -76,18 +106,18 @@ export const TransitionLink = ({ children, href, ...props }) => {
       return;
     }
 
-    // Check if data already exists for this wallet
-    const existingData = localStorage.getItem(publicKey.toString());
-    if (existingData) {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Brief loading for better UX
-      router.push(href);
-      return;
-    }
-
     setIsLoading(true);
 
     try {
+      // Check if data exists in Firestore
+      const existingData = await checkExistingData(publicKey.toString());
+      
+      if (existingData) {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Brief loading for better UX
+        router.push(href);
+        return;
+      }
+
       // Start fetching rewind data immediately
       const rewindDataPromise = fetchRewindData(publicKey.toString());
 
@@ -117,20 +147,11 @@ export const TransitionLink = ({ children, href, ...props }) => {
       }
 
       if (data.success) {
-        localStorage.setItem(publicKey.toString(), JSON.stringify(data.analysis));
-        // Keep loading screen for a smooth transition
+        // const cleanedAnalysis = cleanAnalysisText(data.analysis);
+        await saveDataToFirestore(publicKey.toString(), JSON.stringify(data.analysis));
         await new Promise(resolve => setTimeout(resolve, 500));
         router.push(href);
       }
-
-      // In TransitionLink component, modify where we store the data:
-// if (data.success) {
-//   const cleanedAnalysis = cleanAnalysisText(data.analysis);
-//   localStorage.setItem(publicKey.toString(), JSON.stringify(cleanedAnalysis));
-//   await new Promise(resolve => setTimeout(resolve, 500));
-//   router.push(href);
-// }
-
 
     } catch (error) {
       console.error('Operation failed:', error);

@@ -1,8 +1,13 @@
-"use client";
-
+'use client'
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import html2canvas from 'html2canvas';
 import React, { useState, useMemo, useEffect } from "react";
 import Starfield from "../../components/starField";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import TransactionTracker from "../test";
+import EmblaCarousel from "../../components/EmblaCarousel";
+import "./carousel.css";
 import {
   ConnectionProvider,
   WalletProvider,
@@ -20,17 +25,25 @@ import {
 } from "@solana/wallet-adapter-wallets";
 import { useRef } from "react";
 import { gsap } from "gsap";
-
-import TransactionTracker from "../test";
-import EmblaCarousel from "../../components/EmblaCarousel";
-import "./carousel.css";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyAQqa0KjFo9OBH95G03fsTGNjUbEoU5JbA",
+  authDomain: "emoji-buy.firebaseapp.com",
+  projectId: "emoji-buy",
+  storageBucket: "emoji-buy.firebasestorage.app",
+  messagingSenderId: "329260816313",
+  appId: "1:329260816313:web:34527cb53f22a512254868",
+  measurementId: "G-D654LZE41V"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const Page = () => {
   const network = WalletAdapterNetwork.Devnet;
-
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-
   const wallets = useMemo(
     () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
     [network]
@@ -41,13 +54,71 @@ const Page = () => {
   const SLIDES = Array.from(Array(SLIDE_COUNT).keys());
 
   const [itemWidth, setItemWidth] = useState(0);
+  const [slides, setSlides] = useState([]);
+  const [topToken, setTopToken] = useState([]);
+  const [tokenData, setTokenData] = useState({ symbol: "", icon: "" });
+  const { publicKey } = useWallet();
 
   useEffect(() => {
     const item = document.querySelector(".item");
     if (item) {
-      setItemWidth(item.offsetWidth); // Get the width of an item
+      setItemWidth(item.offsetWidth);
     }
-  }, []); // Runs only once when the component mounts
+  }, []);
+
+  useEffect(() => {
+    const fetchFirestoreData = async () => {
+      if (publicKey) {
+        try {
+          const docRef = doc(db, "walletData", publicKey.toString());
+          const docSnap = await getDoc(docRef);
+console.log(docSnap.data().analysis , "hi");
+          if (docSnap.exists()) {
+            const analysis = docSnap.data().analysis;
+            const analysisPoints = JSON.parse(analysis).split("\n\n");
+
+            const filteredPoints = analysisPoints.filter(
+              (point) => /^\d+\.\s\*\*[^*]+/.test(point) // Matches only lines starting with "number. **text"
+            );
+
+            const cleanedSlides = filteredPoints.map((point) => ({
+              content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "), // Removes extra `**` from title and keeps the structure.
+            }));
+
+            setSlides(cleanedSlides);
+            console.log("Slides from Firestore:", cleanedSlides);
+          }
+        } catch (error) {
+          console.error("Error fetching Firestore data:", error);
+        }
+      }
+    };
+
+    fetchFirestoreData();
+  }, [publicKey]);
+
+  useEffect(() => {
+    const fetchTokenData = async () => {
+      if (publicKey) {
+        try {
+          const response = await axios.get(
+            `/api/summary?walletAddress=${publicKey.toString()}`
+          );
+          const { bagholder } = response.data.data.bagholder;
+
+          setTokenData({
+            symbol: response?.data.data.bagholder?.symbol,
+            icon: response?.data.data.bagholder?.icon,
+          });
+          setTopToken(response?.data?.data?.currentHoldings?.top_tokens || []);
+        } catch (error) {
+          console.error("Error fetching token data:", error);
+        }
+      }
+    };
+
+    fetchTokenData();
+  }, [publicKey]);
 
   const handleNext = () => {
     const list = document.querySelector(".list");
@@ -62,60 +133,7 @@ const Page = () => {
       list.scrollBy({ left: -440, behavior: "smooth" });
     }
   };
-  const [slides, setSlides] = useState([]);
 
-  const slides1 = [Slide1, Slide2, Slide3, Slide4, Slide5, Slide6, Slide7];
-  const { publicKey } = useWallet();
-
-  useEffect(() => {
-    if (publicKey) {
-      const storedData = localStorage.getItem(publicKey.toString());
-      if (storedData) {
-        const analysisPoints = JSON.parse(storedData).split("\n\n");
-
-        const filteredPoints = analysisPoints.filter(
-          (point) => /^\d+\.\s\*\*[^*]+/.test(point) // Matches only lines starting with "number. **text"
-        );
-
-        const cleanedSlides = filteredPoints.map((point) => ({
-          content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "), // Removes extra `**` from title and keeps the structure.
-        }));
-
-        setSlides(cleanedSlides);
-
-        console.log("Slides:", cleanedSlides);
-      }
-    }
-  }, [publicKey]);
-
-  const [topToken, setTopToken] = useState([]);
-  const [tokenData, setTokenData] = useState({ symbol: "", icon: "" });
-
-  useEffect(() => {
-    const fetchTokenData = async () => {
-      if (publicKey) {
-        try {
-          const response = await axios.get(
-            `/api/summary?walletAddress=${publicKey.toString()}`
-          );
-          console.log("API response:", response.data.data.bagholder); // Debugging
-          const { bagholder } = response.data.data.bagholder;
-
-          setTokenData({
-            symbol: response?.data.data.bagholder?.symbol,
-            icon: response?.data.data.bagholder?.icon,
-          });
-          setTopToken(response?.data?.data?.currentHoldings?.top_tokens || []);
-          console.log(topToken);
-          console.log(tokenData);
-        } catch (error) {
-          console.error("Error fetching token data:", error);
-        }
-      }
-    };
-
-    fetchTokenData();
-  }, [publicKey]);
   const slidesall = [
     Slide1,
     (props) => <Slide2 {...props} slideData={slides[0]} />,
@@ -128,9 +146,9 @@ const Page = () => {
     (props) => <Slide9 {...props} slideData={slides[7]} />,
     (props) => <Slide10 {...props} slideData={slides[8]} />,
     (props) => <Slide11 {...props} slideData={slides[9]} />,
-    // (props) => <Slide12 {...props} slideData={slides[10]} />,
-    // (props) => <Slide13 {...props} slideData={slides[11]} />,
+    (props) => <Slide12 {...props} slideData={slides[10]} slides={slides} />,
   ];
+
   return (
     <div className="h-screen w-screen">
       <div className="md:hidden">
@@ -152,7 +170,6 @@ const Page = () => {
                 className="embla__slide"
                 key={index}
                 style={{
-                  // Adjust width to fit nicely
                   overflow: "hidden",
                   flexShrink: 0,
                 }}
@@ -581,3 +598,84 @@ const Slide11 = ({ slideData }) => {
     </div>
   );
 };
+const Slide12 = ({ slideData , slides }) => {
+  // Function to take screenshot and share
+  const handleShare = async () => {
+    try {
+      // Take screenshot using html2canvas
+      const slideElement = document.querySelector('#roast-slide');
+      const canvas = await html2canvas(slideElement);
+      const screenshotUrl = canvas.toDataURL('image/png');
+
+      // Convert base64 to blob
+      const response = await fetch(screenshotUrl);
+      const blob = await response.blob();
+
+      // Create FormData to send to Twitter
+      const formData = new FormData();
+      formData.append('media', blob, 'screenshot.png');
+
+      const text = "bruh solanarewind.fun burned me 🔥";
+      const url = "https://solanarewind.fun";
+      const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+      window.open(shareUrl, '_blank');
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  return (
+    <div className="h-[90vh] bg-[#] w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
+      <img
+        src="./bluehalfbars.png"
+        className="fixed -top-6 -left-6 h-2/5 animate-pulse select-none"
+        draggable="false"
+        alt=""
+      />
+      <div className="text-center w-full px-6">
+        <h1 className="font-semibold text-4xl mb-6 text-white">
+          SOUL burning roasts 🔥🔥
+        </h1>
+        
+        <div className="">
+          {/* Display content from slides 5 and 6 with ellipsis */}
+          <div className="backdrop-blur-sm rounded-xl p-2">
+            <p className="text-white/80 text-xl">
+              {slides?.[4]?.content}
+            </p>
+          </div>
+          
+          <div className=" backdrop-blur-sm rounded-xl p-2 ">
+            <p className="text-white/80 text-xl">
+              {slides?.[5]?.content} ..................... 
+              {/* <br /> get urs on solanarewind.fun */}
+            </p>
+          </div>
+
+          
+        </div>
+
+        <button
+          onClick={handleShare}
+          className="mt-8 bg-[#1DA1F2] text-white px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200 mx-auto"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          <span className="font-medium">Share on X</span>
+        </button>
+        <img
+        src="./bluehalfbars.png"
+        className="fixed -bottom-6 rotate-180 -right-6 h-2/5 animate-pulse select-none"
+        draggable="false"
+        alt=""
+      />
+    </div>
+    </div>
+  );
+};
+

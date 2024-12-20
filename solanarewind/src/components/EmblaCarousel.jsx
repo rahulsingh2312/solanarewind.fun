@@ -9,6 +9,8 @@ import { gsap } from "gsap";
 import axios from "axios";
 import { useWallet } from "@solana/wallet-adapter-react";
 import Link from "next/link";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import {
   NextButton,
   PrevButton,
@@ -16,38 +18,67 @@ import {
 } from "../components/EmblaCarouselArrowButtons";
 import { FaPause, FaPlay } from "react-icons/fa";
 
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyAQqa0KjFo9OBH95G03fsTGNjUbEoU5JbA",
+  authDomain: "emoji-buy.firebaseapp.com",
+  projectId: "emoji-buy",
+  storageBucket: "emoji-buy.firebasestorage.app",
+  messagingSenderId: "329260816313",
+  appId: "1:329260816313:web:34527cb53f22a512254868",
+  measurementId: "G-D654LZE41V"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const EmblaCarousel = (props) => {
   const { slides2, options } = props;
   const { publicKey } = useWallet();
   const [slides, setSlides] = useState([]);
   const progressNode = useRef(null);
   const [tokenData, setTokenData] = useState({ symbol: "", icon: "" });
+  const [topToken, setTopToken] = useState([]);
+  const [slidesInView, setSlidesInView] = useState([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [
     Autoplay({ playOnInit: false, delay: 7000 }),
   ]);
+
+  // Fetch data from Firestore
   useEffect(() => {
-    if (publicKey) {
-      const storedData = localStorage.getItem(publicKey.toString());
-      if (storedData) {
-        const analysisPoints = JSON.parse(storedData).split("\n\n");
+    const fetchFirestoreData = async () => {
+      if (publicKey) {
+        try {
+          const docRef = doc(db, "walletData", publicKey.toString());
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            const analysis = docSnap.data().analysis;
+            const analysisPoints = JSON.parse(analysis).split("\n\n");
 
-        const filteredPoints = analysisPoints.filter(
-          (point) => /^\d+\.\s\*\*[^*]+/.test(point) // Matches only lines starting with "number. **text"
-        );
+            const filteredPoints = analysisPoints.filter(
+              (point) => /^\d+\.\s\*\*[^*]+/.test(point) // Matches only lines starting with "number. **text"
+            );
 
-        const cleanedSlides = filteredPoints.map((point) => ({
-          content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "), // Removes extra `**` from title and keeps the structure.
-        }));
+            const cleanedSlides = filteredPoints.map((point) => ({
+              content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "), // Removes extra `**` from title and keeps the structure.
+            }));
 
-        setSlides(cleanedSlides);
-
-        console.log("Slides:", cleanedSlides);
+            setSlides(cleanedSlides);
+            console.log("Slides from Firestore:", cleanedSlides);
+          }
+        } catch (error) {
+          console.error("Error fetching Firestore data:", error);
+        }
       }
-    }
+    };
+
+    fetchFirestoreData();
   }, [publicKey]);
 
-  const [topToken, setTopToken] = useState([]);
+  // Fetch token data
   useEffect(() => {
     const fetchTokenData = async () => {
       if (publicKey) {
@@ -55,7 +86,7 @@ const EmblaCarousel = (props) => {
           const response = await axios.get(
             `/api/summary?walletAddress=${publicKey.toString()}`
           );
-          console.log("API response:", response.data.data.bagholder); // Debugging
+          console.log("API response:", response.data.data.bagholder);
           const { bagholder } = response.data.data.bagholder;
 
           setTokenData({
@@ -63,8 +94,6 @@ const EmblaCarousel = (props) => {
             icon: response?.data.data.bagholder?.icon,
           });
           setTopToken(response?.data?.data?.currentHoldings?.top_tokens || []);
-          console.log(topToken);
-          console.log(tokenData);
         } catch (error) {
           console.error("Error fetching token data:", error);
         }
@@ -85,9 +114,8 @@ const EmblaCarousel = (props) => {
     useAutoplay(emblaApi);
 
   const { showAutoplayProgress } = useAutoplayProgress(emblaApi, progressNode);
-  const [slidesInView, setSlidesInView] = useState([]);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
+  // Update slides in view
   useEffect(() => {
     if (!emblaApi) return;
 
@@ -97,18 +125,14 @@ const EmblaCarousel = (props) => {
 
       setSlidesInView(inView);
       setCurrentSlideIndex(currentIndex);
-
-      console.log("Current Slide Index:", currentIndex);
-      console.log("Slides In View:", inView);
     };
 
     emblaApi.on("select", updateSlidesInView);
-    updateSlidesInView(); // Initial update
+    updateSlidesInView();
 
     return () => emblaApi.off("select", updateSlidesInView);
   }, [emblaApi]);
 
-  // In your slidesall mapping
   const slidesall = [
     Slide1,
     (props) => <Slide2 {...props} slideData={slides[0]} />,
@@ -125,7 +149,7 @@ const EmblaCarousel = (props) => {
     (props) => <Slide13 {...props} slideData={slides[11]} />,
   ];
 
-  //when user presses space bar it should trigger the pause function and when left arrow then prev when right arrow then next
+  // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "ArrowLeft") {
@@ -158,21 +182,6 @@ const EmblaCarousel = (props) => {
               opacity={currentSlideIndex === index ? 1 : 0.2}
             />
           ))}
-
-          {/* {slides.map((slide, index) => (
-            <div
-              key={index}
-              className="h-full bg-black border-zinc-800 border overflow-hidden rounded-lg embla__slide flex flex-col items-center justify-center p-8"
-              style={{ opacity: currentSlideIndex === index ? 1 : 0.2 }}
-            >
-              <h2 className="text-2xl font-bold text-white mb-4">
-                {slide.content.split(':')[0]}
-              </h2>
-              <p className="text-white/80 text-lg text-center">
-                {slide.content.split(':')[1]}
-              </p>
-            </div>
-          ))} */}
         </div>
       </div>
 
