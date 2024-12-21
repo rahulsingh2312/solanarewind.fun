@@ -267,7 +267,7 @@ const Slide2 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-[#FEF102] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center"
       style={{ opacity }}
     >
-      <ShareButton containerRef={containerRef} />
+      {/* <ShareButton containerRef={containerRef} /> */}
 
       <img
         src="./bluehalfbars.png"
@@ -302,7 +302,7 @@ const Slide3 = ({ opacity = 0.5, notslide }) => {
       className="h-full bg-black border relative rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-evenly border-zinc-800"
       style={{ opacity }}
     >
-       <ShareButton containerRef={containerRef} />
+       {/* <ShareButton containerRef={containerRef} /> */}
       <div className="text-center text-xl font-medium">
         Hover the box to know your favorite token!
         <div
@@ -490,7 +490,7 @@ const Slide5 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-       <ShareButton containerRef={containerRef} />
+       {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./greenbars.png" className="fixed top-0" alt="" />
       <div className="h-40 w-40 bg-white rounded-xl flex items-center justify-center overflow-hidden ">
         <img src="https://c.tenor.com/CNI1fSM1XSoAAAAd/tenor.gif" alt="" />
@@ -514,7 +514,7 @@ const Slide6 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-[#F50000] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
       style={{ opacity }}
     >
-       <ShareButton containerRef={containerRef} />
+       {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./bluebars.png" className="fixed -top-20" alt="" />
       <img
         src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYzZtMndqYzNvazd1eG94Zmd2bHl1NDh6dXVpaHMyb2J2enJteWJvMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wr7oA0rSjnWuiLJOY5/giphy.gif
@@ -543,7 +543,7 @@ const Slide7 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-black border border-gray-900 overflow-hidden flex flex-col items-center justify-center rounded-lg embla__slide"
       style={{ opacity }}
     >
-       <ShareButton containerRef={containerRef} />
+       {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./yellowbars.png" className="fixed -top-20  " alt="" />
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white ">{title}</h1>
       <p className="text-white/80 text-md max-w-80">{description}</p>
@@ -568,7 +568,7 @@ const Slide8 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-       <ShareButton containerRef={containerRef} />
+       {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./greenbars.png" className="fixed top-0" alt="" />
 
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
@@ -589,7 +589,7 @@ const Slide9 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-[#00f500] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
       style={{ opacity }}
     >
-       <ShareButton containerRef={containerRef} />
+       {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./bluebars.png" className="fixed -top-20" alt="" />
       <img
         src="https://s3.coinmarketcap.com/static-gravity/image/4dc5810324c74688a5a1b805f7506ec5.jpg
@@ -619,7 +619,7 @@ const Slide10 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-       <ShareButton containerRef={containerRef} />
+       {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./greenbars.png" className="fixed top-0" alt="" />
 
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
@@ -638,7 +638,7 @@ const Slide11 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-       <ShareButton containerRef={containerRef} />
+       {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./bluebars.png" className="fixed top-0" alt="" />
 
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
@@ -772,7 +772,7 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
   return (
     <div
       ref={containerRef} id="roast-slide" className="h-[90vh] bg-black w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
-    <ShareButton containerRef={containerRef} />
+    {/* <ShareButton containerRef={containerRef} /> */}
     <img src="./greenbars.png" className="fixed top-0" alt="" />
     <div className="text-center w-full px-6 z-50">
       <h1 className="text-2xl font-bold mb-4 text-white">{title}</h1>
@@ -836,14 +836,14 @@ const extractContent = (content) => {
   const match = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
   if (match) {
     return {
-      title: match[1].trim(),
+      title: match[1].replace(/:/g, "").trim(),
       description: match[2].trim()
     };
   }
   // Fallback split method
   const [rawTitle, ...descParts] = (content || "").split(/\s*-\s*/);
   return {
-    title: rawTitle.replace(/^\*\*|\*\*$/g, "").trim(),
+    title: rawTitle.replace(/:/g, "").replace(/^\*\*|\*\*$/g, "").trim(),
     description: descParts.join(" ").trim()
   };
 };

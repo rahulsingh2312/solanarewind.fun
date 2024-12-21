@@ -132,7 +132,7 @@ const ShareButton = ({ containerRef, publicKey }) => {
         const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
         if (typeof window !== "undefined") {
 
-        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        window.open(shareUrl, '_blank');
         }
       };
 

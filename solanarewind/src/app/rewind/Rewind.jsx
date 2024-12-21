@@ -947,20 +947,31 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
 };
 
 
-// Common function to extract and clean title/description
 const extractContent = (content) => {
   if (!content) return { title: "", description: "" };
+  
+  // Match patterns like "**Title** - Description"
   const match = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
   if (match) {
     return {
-      title: match[1].trim(),
+      title: match[1].replace(/:/g, "").trim(),
       description: match[2].trim()
     };
   }
+  
+  // Match patterns like "**Title:** Description"
+  const altMatch = content.match(/\*\*([^*]+)\*\*:\s*(.+)/);
+  if (altMatch) {
+    return {
+      title: altMatch[1].replace(/:/g, "").trim(),
+      description: altMatch[2].trim()
+    };
+  }
+  
   // Fallback split method
-  const [rawTitle, ...descParts] = (content || "").split(/\s*-\s*/);
+  const [rawTitle, ...descParts] = (content || "").split(/[:\-]\s*/);
   return {
-    title: rawTitle.replace(/^\*\*|\*\*$/g, "").trim(),
+    title: rawTitle.replace(/:/g, "").replace(/^\*\*|\*\*$/g, "").trim(),
     description: descParts.join(" ").trim()
   };
 };
