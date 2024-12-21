@@ -3,7 +3,7 @@ import React, { useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useState, useEffect } from "react";
 import html2canvas from "html2canvas";
-
+import ShareButton from "../app/sharebutton2";
 import Autoplay from "embla-carousel-autoplay";
 import { useAutoplay } from "../components/EmblaCarouselAutoplay";
 import { useAutoplayProgress } from "../components/EmblaCarouselAutoplayProgress";
@@ -33,7 +33,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
+if (typeof window !== "undefined") {
+  gsap.registerPlugin();
+}
 const EmblaCarousel = (props) => {
   const { slides2, options } = props;
   const { publicKey } = useWallet();
@@ -162,9 +164,9 @@ const EmblaCarousel = (props) => {
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    // window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      // window.removeEventListener("keydown", handleKeyDown);
     };
   }, [
     onAutoplayButtonClick,
@@ -257,27 +259,29 @@ const Slide1 = ({ opacity = 1 }) => {
 
 const Slide2 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
-
+  const containerRef = useRef();
 
   return (
     <div
+      ref={containerRef}
       className="h-full bg-[#FEF102] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center"
       style={{ opacity }}
     >
+      <ShareButton containerRef={containerRef} />
+
       <img
         src="./bluehalfbars.png"
-        className="fixed -top-6 -left-6 h-2/5 animate-pulse select-none"
+        className="fixed -top-6 -left-6 h-2/5 animate-pulse select-none token-data"
         draggable="false"
         alt=""
       />
 
-      <h1 className="text-black text-4xl font-semibold text-center">{title}</h1>
-
-      <p className="text-black/70 text-lg mt-2 text-center">{description}</p>
+      <h1 className="text-black text-4xl font-semibold text-center token-data">{title}</h1>
+      <p className="text-black/70 text-lg mt-2 text-center token-data">{description}</p>
 
       <img
         src="./bluehalfbars.png"
-        className="fixed -bottom-6 rotate-180 -right-6 h-2/5 animate-pulse select-none"
+        className="fixed -bottom-6 rotate-180 -right-6 h-2/5 animate-pulse select-none token-data"
         draggable="false"
         alt=""
       />
@@ -290,11 +294,15 @@ const Slide3 = ({ opacity = 0.5, notslide }) => {
   {
     console.log(notslide);
   }
+  const containerRef = useRef();
+
   return (
     <div
+      ref={containerRef}
       className="h-full bg-black border relative rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-evenly border-zinc-800"
       style={{ opacity }}
     >
+       <ShareButton containerRef={containerRef} />
       <div className="text-center text-xl font-medium">
         Hover the box to know your favorite token!
         <div
@@ -474,11 +482,15 @@ const Slide5 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
   console.log(slideData);
+  const containerRef = useRef();
+
   return (
     <div
+      ref={containerRef}
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
+       <ShareButton containerRef={containerRef} />
       <img src="./greenbars.png" className="fixed top-0" alt="" />
       <div className="h-40 w-40 bg-white rounded-xl flex items-center justify-center overflow-hidden ">
         <img src="https://c.tenor.com/CNI1fSM1XSoAAAAd/tenor.gif" alt="" />
@@ -494,11 +506,15 @@ const Slide6 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
 
+  const containerRef = useRef();
+
   return (
     <div
+      ref={containerRef}
       className="h-full bg-[#F50000] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
       style={{ opacity }}
     >
+       <ShareButton containerRef={containerRef} />
       <img src="./bluebars.png" className="fixed -top-20" alt="" />
       <img
         src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYzZtMndqYzNvazd1eG94Zmd2bHl1NDh6dXVpaHMyb2J2enJteWJvMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wr7oA0rSjnWuiLJOY5/giphy.gif
@@ -519,12 +535,15 @@ const Slide6 = ({ opacity = 0.5, slideData }) => {
 const Slide7 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
+  const containerRef = useRef();
 
   return (
     <div
+      ref={containerRef}
       className="h-full bg-black border border-gray-900 overflow-hidden flex flex-col items-center justify-center rounded-lg embla__slide"
       style={{ opacity }}
     >
+       <ShareButton containerRef={containerRef} />
       <img src="./yellowbars.png" className="fixed -top-20  " alt="" />
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white ">{title}</h1>
       <p className="text-white/80 text-md max-w-80">{description}</p>
@@ -541,11 +560,15 @@ const Slide8 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
 
+  const containerRef = useRef();
+
   return (
     <div
+      ref={containerRef}
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
+       <ShareButton containerRef={containerRef} />
       <img src="./greenbars.png" className="fixed top-0" alt="" />
 
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
@@ -558,11 +581,15 @@ const Slide9 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
 
+  const containerRef = useRef();
+
   return (
     <div
+      ref={containerRef}
       className="h-full bg-[#00f500] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
       style={{ opacity }}
     >
+       <ShareButton containerRef={containerRef} />
       <img src="./bluebars.png" className="fixed -top-20" alt="" />
       <img
         src="https://s3.coinmarketcap.com/static-gravity/image/4dc5810324c74688a5a1b805f7506ec5.jpg
@@ -584,11 +611,15 @@ const Slide9 = ({ opacity = 0.5, slideData }) => {
 const Slide10 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
+  const containerRef = useRef();
+
   return (
     <div
+      ref={containerRef}
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
+       <ShareButton containerRef={containerRef} />
       <img src="./greenbars.png" className="fixed top-0" alt="" />
 
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
@@ -599,12 +630,15 @@ const Slide10 = ({ opacity = 0.5, slideData }) => {
 };
 const Slide11 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
+  const containerRef = useRef();
 
   return (
     <div
+      ref={containerRef}
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
+       <ShareButton containerRef={containerRef} />
       <img src="./bluebars.png" className="fixed top-0" alt="" />
 
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
@@ -722,7 +756,10 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
       const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
         text
       )}&url=${encodeURIComponent(url)}`;
+      if (typeof window !== "undefined") {
+
       window.open(shareUrl, "_blank");
+      }
     } catch (error) {
       console.error("Error sharing:", error);
     }
@@ -730,14 +767,13 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
   
 
 
+  const containerRef = useRef();
+
   return (
-    <div id="roast-slide" className="h-[90vh] bg-black w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
-    <img
-      src="./bluehalfbars.png"
-      className="fixed -top-6 -left-6 h-1/3 animate-pulse select-none"
-      draggable="false"
-      alt=""
-    />
+    <div
+      ref={containerRef} id="roast-slide" className="h-[90vh] bg-black w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
+    <ShareButton containerRef={containerRef} />
+    <img src="./greenbars.png" className="fixed top-0" alt="" />
     <div className="text-center w-full px-6 z-50">
       <h1 className="text-2xl font-bold mb-4 text-white">{title}</h1>
       <p className="text-lg mb-6 text-white/80">{description}</p>
@@ -773,7 +809,7 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
         </div>
       </div>
 
-      <div id="buttons-container" className="flex gap-4 justify-center">
+      {/* <div id="buttons-container" className="flex gap-4 justify-center">
         <button
           onClick={handleShare}
           className="mt-4 bg-[#1DA1F2] text-white px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200"
@@ -785,16 +821,11 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
         </button>
 
    
-      </div>
+      </div> */}
     </div>
     
-    <img
-      src="./bluehalfbars.png"
-      className="fixed -bottom-6 rotate-180 -right-6 h-1/3 animate-pulse select-none"
-      draggable="false"
-      alt=""
-    />
-  </div>
+    <img src="./greenbars.png" className="fixed bottom-0 rotate-180" alt="" />
+    </div>
   );
 };
 

@@ -9,6 +9,7 @@ export default function Starfield({
     starCount = 5000 
 }) {
     useEffect(() => {
+
         const canvas = document.getElementById('starfield');
 
         if (canvas) {
@@ -121,6 +122,7 @@ export default function Starfield({
         return () => {
             window.onresize = null;
         };
+    
     }, [starColor, backgroundColor, speedFactor, starCount]);
 
     return (

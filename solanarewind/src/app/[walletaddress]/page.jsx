@@ -205,7 +205,10 @@ export default function WalletPage() {
               onClick={() => {
                
                 const shareUrl = `https://solanarewind.fun`;
+                if (typeof window !== "undefined") {
+
                 window.open(shareUrl, "_blank");
+                }
               }}
               className="mt-4 bg-white text-black px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200 mx-auto"
             >
