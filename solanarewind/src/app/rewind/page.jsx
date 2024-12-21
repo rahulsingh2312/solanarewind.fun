@@ -1,6 +1,6 @@
 "use client";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc  , setDoc , updateDoc} from "firebase/firestore";
 import html2canvas from "html2canvas";
 import React, { useState, useMemo, useEffect } from "react";
 import Starfield from "../../components/starField";
@@ -104,13 +104,52 @@ const Page = () => {
           const response = await axios.get(
             `/api/summary?walletAddress=${publicKey.toString()}`
           );
+
           const { bagholder } = response.data.data.bagholder;
+          const topTokens = response?.data?.data?.currentHoldings?.top_tokens || [];
+
+
+          const tokenData = {
+            mostTraded: {
+              symbol: response?.data.data.bagholder?.symbol,
+              icon: response?.data.data.bagholder?.icon,
+            },
+            topThreeTokens: topTokens.slice(0, 3).map(token => ({
+              symbol: token.symbol,
+              icon: token.icon,
+              address: token.address
+            }))
+          };
+
+
+
 
           setTokenData({
             symbol: response?.data.data.bagholder?.symbol,
             icon: response?.data.data.bagholder?.icon,
           });
           setTopToken(response?.data?.data?.currentHoldings?.top_tokens || []);
+
+         
+ // Get existing document
+ const docRef = doc(db, "walletData", publicKey.toString());
+ const docSnap = await getDoc(docRef);
+
+ if (docSnap.exists()) {
+   // Update existing document with token data
+   await updateDoc(docRef, {
+     tokenData: tokenData,
+     lastUpdated: new Date().toISOString()
+   });
+ } else {
+   // Create new document with both analysis and token data
+   await setDoc(docRef, {
+     tokenData: tokenData,
+     lastUpdated: new Date().toISOString()
+   });
+ }
+
+           // Prepare token data
         } catch (error) {
           console.error("Error fetching token data:", error);
         }
@@ -146,7 +185,7 @@ const Page = () => {
     (props) => <Slide9 {...props} slideData={slides[7]} />,
     (props) => <Slide10 {...props} slideData={slides[8]} />,
     (props) => <Slide11 {...props} slideData={slides[9]} />,
-    (props) => <Slide12 {...props} slideData={slides[10]} slides={slides} />,
+    (props) => <Slide12 {...props} slideData={slides[10]} notslide={tokenData} topToken={topToken} slides={slides} />,
   ];
 
   return (
@@ -243,12 +282,8 @@ const Slide1 = () => {
 };
 
 const Slide2 = ({ slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
   return (
     <div className="h-[90vh] bg-[#FEF102] w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
       <img
@@ -325,11 +360,8 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin();
 }
 const Slide4 = ({ slideData, topToken }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
 
   const container = useRef(null);
   const tl = useRef(null);
@@ -454,12 +486,8 @@ const Slide4 = ({ slideData, topToken }) => {
   );
 };
 const Slide5 = ({ slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
   return (
     <div className="h-[90vh] w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide">
       <img src="./greenbars.png" className="fixed top-0" alt="" />
@@ -474,12 +502,8 @@ const Slide5 = ({ slideData }) => {
 };
 
 const Slide6 = ({ slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
   return (
     <div className="h-[90vh] w-[440px] bg-[#F50000] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900">
       <img src="./bluebars.png" className="fixed -top-20" alt="" />
@@ -501,12 +525,7 @@ const Slide6 = ({ slideData }) => {
 };
 
 const Slide7 = ({ slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
 
   return (
     <div className="h-[90vh] w-[440px] bg-black borderborder border-gray-900 overflow-hidden flex flex-col items-center justify-center rounded-lg embla__slide">
@@ -522,12 +541,8 @@ const Slide7 = ({ slideData }) => {
   );
 };
 const Slide8 = ({ slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
   return (
     <div className="h-[90vh] w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide">
       <img src="./greenbars.png" className="fixed top-0" alt="" />
@@ -540,12 +555,7 @@ const Slide8 = ({ slideData }) => {
 };
 
 const Slide9 = ({ slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
 
   return (
     <div className="h-[90vh] w-[440px] bg-[#00f500] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900">
@@ -568,12 +578,7 @@ const Slide9 = ({ slideData }) => {
 };
 
 const Slide10 = ({ slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
 
   return (
     <div className="h-[90vh] w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide">
@@ -586,7 +591,7 @@ const Slide10 = ({ slideData }) => {
   );
 };
 const Slide11 = ({ slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+  const { title, description } = extractContent(slideData?.content);
 
   return (
     <div className="h-[90vh] w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide">
@@ -598,24 +603,89 @@ const Slide11 = ({ slideData }) => {
     </div>
   );
 };
-const Slide12 = ({ slideData, slides }) => {
-  // Function to take screenshot and share
+const Slide12 = ({ slideData, slides, notslide, topToken }) => {
+  // Extract conclusion section which contains the title and description
+  const getConclusionContent = (slides) => {
+    // First try to find the conclusion in the last slide
+    if (slides && slides.length > 0) {
+      const lastSlide = slides[slides.length - 1];
+      if (lastSlide?.content) {
+        // Look for the conclusion section
+        if (lastSlide.content.includes("Conclusion:")) {
+          const conclusionPart = lastSlide.content.split("Conclusion:")[1].trim();
+          // Extract title and description
+          const titleMatch = conclusionPart.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
+          if (titleMatch) {
+            return {
+              title: titleMatch[1].trim(),
+              description: titleMatch[2].trim()
+            };
+          }
+        }
+      }
+    }
+
+    // If we can't find it in the last slide, search through all slides
+    const conclusionSlide = slides?.find(slide => 
+      slide?.content?.includes("### Conclusion:") || 
+      slide?.content?.includes("Conclusion:")
+    );
+
+    if (conclusionSlide?.content) {
+      const content = conclusionSlide.content;
+      // Try to match the format "**Title** - Description"
+      const titleMatch = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
+      
+      if (titleMatch) {
+        return {
+          title: titleMatch[1].trim(),
+          description: titleMatch[2].trim()
+        };
+      }
+    }
+
+    // If we still can't find it, try to find any title in the analysis
+    const titleSlide = slides?.find(slide => 
+      slide?.content?.includes("Title:") || 
+      slide?.content?.includes("**Title:")
+    );
+
+    if (titleSlide?.content) {
+      const titleMatch = titleSlide.content.match(/Title:\s*(.+?)\s*(?:-|$)/);
+      if (titleMatch) {
+        return {
+          title: titleMatch[1].trim(),
+          description: titleSlide.content.split('-')[1]?.trim() || "Your year in review on Solana"
+        };
+      }
+    }
+
+    // Fallback values
+    return {
+      title: "The Wallet of Woe",
+      description: "Your saga of crypto adventures, featuring missed opportunities, questionable decisions, and a collection of tokens that tell quite a story."
+    };
+  };
+
+  console.log("Slides data:", slides); // Debug log
+  const { title, description } = getConclusionContent(slides);
+  console.log("Parsed conclusion:", { title, description }); // Debug log
+  
+  const { symbol, icon } = notslide || { symbol: "", icon: "" };
+
   const handleShare = async () => {
     try {
-      // Take screenshot using html2canvas
       const slideElement = document.querySelector("#roast-slide");
       const canvas = await html2canvas(slideElement);
       const screenshotUrl = canvas.toDataURL("image/png");
 
-      // Convert base64 to blob
       const response = await fetch(screenshotUrl);
       const blob = await response.blob();
 
-      // Create FormData to send to Twitter
       const formData = new FormData();
       formData.append("media", blob, "screenshot.png");
 
-      const text = "bruh solanarewind.fun burned me 🔥";
+      const text = "Check out my Solana Rewind! 🔥";
       const url = "https://solanarewind.fun";
       const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
         text
@@ -627,7 +697,7 @@ const Slide12 = ({ slideData, slides }) => {
   };
 
   return (
-    <div className="h-[90vh] bg-black w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
+    <div id="roast-slide" className="h-[90vh] bg-black w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
       <img
         src="./bluehalfbars.png"
         className="fixed -top-6 -left-6 h-1/3 animate-pulse select-none"
@@ -635,60 +705,76 @@ const Slide12 = ({ slideData, slides }) => {
         alt=""
       />
       <div className="text-center w-full px-6 z-50">
-        <h1 className="text-xl mb-6 text-white">
-          "You've got more USDC than a money hoarder at a Diwali sale. Congrats,
-          you're the proud owner of the most stable 'asset' in the crypto world
-          – literally, it's as exciting as watching paint dry."
-        </h1>
-        <img
-          src="https://www.pngall.com/wp-content/uploads/10/Solana-Crypto-Logo-PNG-File.png"
-          alt=""
-          className="h-32 mx-auto rounded-full border-4 "
-        />
+        <h1 className="text-2xl font-bold mb-4 text-white">{title}</h1>
+        <p className="text-lg mb-6 text-white/80">{description}</p>
 
-        <div className="">
-          {/* Display content from slides 5 and 6 with ellipsis */}
-          <div className="backdrop-blur-sm rounded-xl p-2">
-            <p className="text-white/80 text-xl">{slides?.[4]?.content}</p>
+        {icon && (
+          <img
+            src={icon}
+            alt={`${symbol} logo`}
+            className="h-32 w-32 mx-auto rounded-full border-4 border-white/20 mb-6"
+          />
+        )}
+
+        <div className="flex justify-between items-start mb-8">
+          <div className="text-left">
+            <h2 className="font-bold text-xl text-white mb-3">Top Tokens</h2>
+            <ul className="text-base font-medium text-white/60 space-y-2">
+              {topToken?.slice(0, 3).map((token, index) => (
+                <li key={index} className="flex items-center gap-2">
+                  {token.icon && (
+                    <img src={token.icon} alt={token.symbol} className="w-6 h-6 rounded-full" />
+                  )}
+                  <span>{token.symbol}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-
-          <div className=" backdrop-blur-sm rounded-xl p-2 ">
-            <p className="text-white/80 text-xl">
-              {slides?.[5]?.content}
-              {/* <br /> get urs on solanarewind.fun */}
-            </p>
+          <div className="text-right">
+            <h2 className="font-bold text-xl text-white mb-3">Most Traded</h2>
+            <div className="flex items-center gap-2 justify-end">
+              {icon && <img src={icon} alt={symbol} className="w-6 h-6 rounded-full" />}
+              <span className="text-white/60">{symbol}</span>
+            </div>
           </div>
-        </div>
-
-        <div className="flex justify-between items-start">
-          <ul className="text-base font-medium text-white/60 flex flex-col gap-2">
-            <h1 className="font-bold text-xl text-white">Top Coins</h1>
-            <li>Solana</li>
-            <li>Rizzmas</li>
-            <li>USDC</li>
-          </ul>
-          <ul className="text-base font-medium text-white/60">
-            <h1 className="font-bold text-xl text-white">Top Coins</h1>
-            <li>Solana</li>
-          </ul>
         </div>
 
         <button
           onClick={handleShare}
-          className="mt-8 bg-[#1DA1F2] text-white px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200 mx-auto"
+          className="mt-4 bg-[#1DA1F2] text-white px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200 mx-auto"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
           </svg>
           <span className="font-medium">Share on X</span>
         </button>
-        <img
-          src="./bluehalfbars.png"
-          className="fixed -bottom-6 rotate-180 -right-6 h-1/3 animate-pulse select-none"
-          draggable="false"
-          alt=""
-        />
       </div>
+      
+      <img
+        src="./bluehalfbars.png"
+        className="fixed -bottom-6 rotate-180 -right-6 h-1/3 animate-pulse select-none"
+        draggable="false"
+        alt=""
+      />
     </div>
   );
+};
+
+
+// Common function to extract and clean title/description
+const extractContent = (content) => {
+  if (!content) return { title: "", description: "" };
+  const match = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
+  if (match) {
+    return {
+      title: match[1].trim(),
+      description: match[2].trim()
+    };
+  }
+  // Fallback split method
+  const [rawTitle, ...descParts] = (content || "").split(/\s*-\s*/);
+  return {
+    title: rawTitle.replace(/^\*\*|\*\*$/g, "").trim(),
+    description: descParts.join(" ").trim()
+  };
 };
