@@ -15,7 +15,7 @@ export async function GET(request) {
   const endpoints = {
     summary: `${baseUrl}/api/summary?walletAddress=${walletAddress}`,
     nfts: `${baseUrl}/api/nfts?walletAddress=${walletAddress}`,
-    tokensTransactions: `${baseUrl}/api/tokens?walletAddress=${walletAddress}&type=transactions`,
+    // tokensTransactions: `${baseUrl}/api/tokens?walletAddress=${walletAddress}&type=transactions`,
     tokensOwned: `${baseUrl}/api/tokens?walletAddress=${walletAddress}&type=tokens`
   };
 

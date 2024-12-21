@@ -42,7 +42,19 @@ export async function GET(request) {
          if (response.data === null) {
             return NextResponse.json({ wallet: 'too new' });
         }
-        return NextResponse.json(response.data);
+       // Modify the response to only include top 5 tokens
+       const modifiedResponse = {
+        ...response.data,
+        data: {
+            ...response.data.data,
+            currentHoldings: {
+                ...response.data.data.currentHoldings,
+                all_tokens: response.data.data.currentHoldings.all_tokens.slice(0, 10)
+            }
+        }
+    };
+
+    return NextResponse.json(modifiedResponse);
     } catch (error) {
         return NextResponse.json({ wallet: 'too new' });
 

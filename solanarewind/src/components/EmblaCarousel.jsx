@@ -2,6 +2,8 @@
 import React, { useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useState, useEffect } from "react";
+import html2canvas from "html2canvas";
+
 import Autoplay from "embla-carousel-autoplay";
 import { useAutoplay } from "../components/EmblaCarouselAutoplay";
 import { useAutoplayProgress } from "../components/EmblaCarouselAutoplayProgress";
@@ -145,8 +147,7 @@ const EmblaCarousel = (props) => {
     (props) => <Slide9 {...props} slideData={slides[7]} />,
     (props) => <Slide10 {...props} slideData={slides[8]} />,
     (props) => <Slide11 {...props} slideData={slides[9]} />,
-    (props) => <Slide12 {...props} slideData={slides[10]} />,
-    (props) => <Slide13 {...props} slideData={slides[11]} />,
+    (props) => <Slide12 {...props} slideData={slides[10]} notslide={tokenData} publicKey={publicKey?.toString()} topToken={topToken} slides={slides} />,
   ];
 
   // Keyboard controls
@@ -255,12 +256,8 @@ const Slide1 = ({ opacity = 1 }) => {
 };
 
 const Slide2 = ({ opacity = 0.5, slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
 
   return (
     <div
@@ -339,11 +336,8 @@ const Slide3 = ({ opacity = 0.5, notslide }) => {
 };
 
 const Slide4 = ({ opacity = 0.5, slideData, topToken }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
 
   const container = useRef(null);
   const tl = useRef(null);
@@ -477,12 +471,8 @@ const Slide4 = ({ opacity = 0.5, slideData, topToken }) => {
 };
 
 const Slide5 = ({ opacity = 0.5, slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
   console.log(slideData);
   return (
     <div
@@ -501,12 +491,8 @@ const Slide5 = ({ opacity = 0.5, slideData }) => {
 };
 
 const Slide6 = ({ opacity = 0.5, slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
 
   return (
     <div
@@ -531,12 +517,8 @@ const Slide6 = ({ opacity = 0.5, slideData }) => {
   );
 };
 const Slide7 = ({ opacity = 0.5, slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
 
   return (
     <div
@@ -556,12 +538,8 @@ const Slide7 = ({ opacity = 0.5, slideData }) => {
 };
 
 const Slide8 = ({ opacity = 0.5, slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
 
   return (
     <div
@@ -577,12 +555,8 @@ const Slide8 = ({ opacity = 0.5, slideData }) => {
   );
 };
 const Slide9 = ({ opacity = 0.5, slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
+
 
   return (
     <div
@@ -608,12 +582,7 @@ const Slide9 = ({ opacity = 0.5, slideData }) => {
 };
 
 const Slide10 = ({ opacity = 0.5, slideData }) => {
-  const [rawTitle, rawDescription] = (slideData?.content || ":").split(
-    /:(.*)/s
-  );
-  // Remove leading '**' from title and description if they exist
-  const title = rawTitle?.replace(/^\*\*/, "").trim();
-  const description = rawDescription?.replace(/^\*\*/, "").trim();
+  const { title, description } = extractContent(slideData?.content);
 
   return (
     <div
@@ -629,7 +598,7 @@ const Slide10 = ({ opacity = 0.5, slideData }) => {
   );
 };
 const Slide11 = ({ opacity = 0.5, slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+  const { title, description } = extractContent(slideData?.content);
 
   return (
     <div
@@ -645,29 +614,205 @@ const Slide11 = ({ opacity = 0.5, slideData }) => {
   );
 };
 
-const Slide12 = ({ opacity = 0.5, slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
+const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
+  // Extract conclusion section which contains the title and description
+  const getConclusionContent = (slides) => {
+    // First try to find the conclusion in the last slide
+    if (slides && slides.length > 0) {
+      const lastSlide = slides[slides.length - 1];
+      if (lastSlide?.content) {
+        // Look for the conclusion section
+        if (lastSlide.content.includes("Conclusion:")) {
+          const conclusionPart = lastSlide.content.split("Conclusion:")[1].trim();
+          // Extract title and description
+          const titleMatch = conclusionPart.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
+          if (titleMatch) {
+            return {
+              title: titleMatch[1].trim(),
+              description: titleMatch[2].trim()
+            };
+          }
+        }
+      }
+    }
+
+    // If we can't find it in the last slide, search through all slides
+    const conclusionSlide = slides?.find(slide => 
+      slide?.content?.includes("### Conclusion:") || 
+      slide?.content?.includes("Conclusion:")
+    );
+
+    if (conclusionSlide?.content) {
+      const content = conclusionSlide.content;
+      // Try to match the format "**Title** - Description"
+      const titleMatch = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
+      
+      if (titleMatch) {
+        return {
+          title: titleMatch[1].trim(),
+          description: titleMatch[2].trim()
+        };
+      }
+    }
+
+    // If we still can't find it, try to find any title in the analysis
+    const titleSlide = slides?.find(slide => 
+      slide?.content?.includes("Title:") || 
+      slide?.content?.includes("**Title:")
+    );
+
+    if (titleSlide?.content) {
+      const titleMatch = titleSlide.content.match(/Title:\s*(.+?)\s*(?:-|$)/);
+      if (titleMatch) {
+        return {
+          title: titleMatch[1].trim(),
+          description: titleSlide.content.split('-')[1]?.trim() || "Your year in review on Solana"
+        };
+      }
+    }
+
+    // Fallback values
+    return {
+      title: "The Wallet of Woe",
+      description: "Your saga of crypto adventures, featuring missed opportunities, questionable decisions, and a collection of tokens that tell quite a story."
+    };
+  };
+
+  console.log("Slides data:", slides); // Debug log
+  const { title, description } = getConclusionContent(slides);
+  console.log("Parsed conclusion:", { title, description }); // Debug log
+  
+  const { symbol, icon } = notslide || { symbol: "", icon: "" };
+
+  const handleShare = async () => {
+    try {
+      // First, hide just the buttons container
+      const buttonsContainer = document.querySelector('#buttons-container');
+      buttonsContainer.style.display = 'none';
+  
+      // Force token data to be visible
+      const tokenElements = document.querySelectorAll('.token-data');
+      tokenElements.forEach(el => {
+        el.style.opacity = '1';
+        el.style.visibility = 'visible';
+      });
+  
+      // Capture the slide with visible data but without buttons
+      const slideElement = document.querySelector("#roast-slide");
+      const canvas = await html2canvas(slideElement, {
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#000000'
+      });
+  
+      // Show the buttons again
+      buttonsContainer.style.display = 'flex';
+  
+      // Download the image
+      const link = document.createElement('a');
+      link.download = 'solana-rewind.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+  
+      // Share on X
+      const text = "bruh, solana rewind roasted ☹️ me hard, try only if you got guts. ☠️ ";
+      const url = `https://solanarewind.fun/${publicKey}`;
+      const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        text
+      )}&url=${encodeURIComponent(url)}`;
+      window.open(shareUrl, "_blank");
+    } catch (error) {
+      console.error("Error sharing:", error);
+    }
+  };
+  
+
 
   return (
-    <div
-      className="h-full bg-black border rounded-lg embla__slide"
-      style={{ opacity }}
-    >
-      <h1>{title}</h1>
-      {description}
+    <div id="roast-slide" className="h-[90vh] bg-black w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
+    <img
+      src="./bluehalfbars.png"
+      className="fixed -top-6 -left-6 h-1/3 animate-pulse select-none"
+      draggable="false"
+      alt=""
+    />
+    <div className="text-center w-full px-6 z-50">
+      <h1 className="text-2xl font-bold mb-4 text-white">{title}</h1>
+      <p className="text-lg mb-6 text-white/80">{description}</p>
+
+      {icon && (
+        <img
+          src={icon}
+          alt={`${symbol} logo`}
+          className="token-data h-32 w-32 mx-auto rounded-full border-4 border-white/20 mb-6"
+        />
+      )}
+
+      <div className="flex justify-between items-start mb-8">
+        <div className="text-left token-data">
+          <h2 className="font-bold text-xl text-white mb-3">Top Tokens</h2>
+          <ul className="text-base font-medium text-white/60 space-y-2">
+            {topToken?.slice(0, 3).map((token, index) => (
+              <li key={index} className="flex items-center gap-2">
+                {token.icon && (
+                  <img src={token.icon} alt={token.symbol} className="w-6 h-6 rounded-full" />
+                )}
+                <span>{token.symbol}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="text-right token-data">
+          <h2 className="font-bold text-xl text-white mb-3">Most Traded</h2>
+          <div className="flex items-center gap-2 justify-end">
+            {icon && <img src={icon} alt={symbol} className="w-6 h-6 rounded-full" />}
+            <span className="text-white/60">{symbol}</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="buttons-container" className="flex gap-4 justify-center">
+        <button
+          onClick={handleShare}
+          className="mt-4 bg-[#1DA1F2] text-white px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          <span className="font-medium">Share on X</span>
+        </button>
+
+   
+      </div>
     </div>
+    
+    <img
+      src="./bluehalfbars.png"
+      className="fixed -bottom-6 rotate-180 -right-6 h-1/3 animate-pulse select-none"
+      draggable="false"
+      alt=""
+    />
+  </div>
   );
 };
-const Slide13 = ({ opacity = 0.5, slideData }) => {
-  const [title, description] = (slideData?.content || ":").split(/:(.*)/s);
 
-  return (
-    <div
-      className="h-full bg-black border rounded-lg embla__slide"
-      style={{ opacity }}
-    >
-      <h1>{title}</h1>
-      {description}
-    </div>
-  );
+
+// Common function to extract and clean title/description
+const extractContent = (content) => {
+  if (!content) return { title: "", description: "" };
+  const match = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
+  if (match) {
+    return {
+      title: match[1].trim(),
+      description: match[2].trim()
+    };
+  }
+  // Fallback split method
+  const [rawTitle, ...descParts] = (content || "").split(/\s*-\s*/);
+  return {
+    title: rawTitle.replace(/^\*\*|\*\*$/g, "").trim(),
+    description: descParts.join(" ").trim()
+  };
 };

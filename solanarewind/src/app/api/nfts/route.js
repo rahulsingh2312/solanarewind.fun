@@ -62,13 +62,13 @@ export async function GET(request) {
       return monthMatch ? monthMatch[1] : 'Unknown';
     });
 
-    // Transform assets into a more frontend-friendly format
-    const nftDetails = assets.items.map((asset) => ({
-      id: asset.id,
+     // Transform assets into a more frontend-friendly format and limit to 10 NFTs
+     const nftDetails = assets.items.map((asset) => ({
       title: asset.content?.metadata?.name || 'Untitled NFT',
       description: asset.content?.metadata?.description || 'No description',
       imageUrl: asset.content?.links?.image || '',
-    }));
+    })).slice(0, 10); // Limit to 10 NFTs
+
 
     // Return comprehensive NFT analysis
     return NextResponse.json({

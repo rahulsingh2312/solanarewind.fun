@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc  , setDoc , updateDoc} from "firebase/firestore";
 import html2canvas from "html2canvas";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect , useRef } from "react";
 import Starfield from "../../components/starField";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import TransactionTracker from "../test";
@@ -23,7 +23,7 @@ import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
-import { useRef } from "react";
+// import { useRef } from "react";
 import { gsap } from "gsap";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
@@ -59,6 +59,47 @@ const Page = () => {
   const [tokenData, setTokenData] = useState({ symbol: "", icon: "" });
   const { publicKey } = useWallet();
 
+  const audioRef = useRef(null);  // Add audio reference
+  const [isPlaying, setIsPlaying] = useState(true);
+
+ // Audio toggle function
+ const toggleAudio = () => {
+  if (audioRef.current) {
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(error => {
+        console.log("Audio playback failed:", error);
+      });
+    }
+    setIsPlaying(!isPlaying);
+  }
+};
+  // Initialize audio
+  useEffect(() => {
+    audioRef.current = new Audio('/audio.mp3');
+    audioRef.current.loop = true;
+    
+    const playAudio = () => {
+      if (audioRef.current) {
+        audioRef.current.play().catch(error => {
+          console.log("Audio playback failed:", error);
+          setIsPlaying(false);
+        });
+      }
+    };
+
+    playAudio();
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    };
+  }, []);
+
+    
   useEffect(() => {
     const item = document.querySelector(".item");
     if (item) {
@@ -132,7 +173,7 @@ const Page = () => {
 
          
  // Get existing document
- const docRef = doc(db, "walletData", publicKey.toString());
+ const docRef = doc(db, "walletData", publicKey?.toString());
  const docSnap = await getDoc(docRef);
 
  if (docSnap.exists()) {
@@ -185,11 +226,17 @@ const Page = () => {
     (props) => <Slide9 {...props} slideData={slides[7]} />,
     (props) => <Slide10 {...props} slideData={slides[8]} />,
     (props) => <Slide11 {...props} slideData={slides[9]} />,
-    (props) => <Slide12 {...props} slideData={slides[10]} notslide={tokenData} topToken={topToken} slides={slides} />,
+    (props) => <Slide12 {...props} slideData={slides[10]} notslide={tokenData} publicKey={publicKey?.toString()} topToken={topToken} slides={slides} />,
   ];
 
   return (
     <div className="h-screen w-screen">
+        <button 
+        onClick={toggleAudio}
+        className="fixed bottom-4 left-4 text-4xl z-50 bg-black/50 p-4 rounded-full backdrop-blur-sm border border-white/20 hover:bg-black/70 transition-colors duration-200"
+      >
+        {isPlaying ? '🔊' : '🔇'}
+      </button>
       <div className="md:hidden">
         <EmblaCarousel slides2={SLIDES} options={OPTIONS} />
       </div>
@@ -603,7 +650,7 @@ const Slide11 = ({ slideData }) => {
     </div>
   );
 };
-const Slide12 = ({ slideData, slides, notslide, topToken }) => {
+const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
   // Extract conclusion section which contains the title and description
   const getConclusionContent = (slides) => {
     // First try to find the conclusion in the last slide
@@ -675,18 +722,39 @@ const Slide12 = ({ slideData, slides, notslide, topToken }) => {
 
   const handleShare = async () => {
     try {
+      // First, hide just the buttons container
+      const buttonsContainer = document.querySelector('#buttons-container');
+      buttonsContainer.style.display = 'none';
+  
+      // Force token data to be visible
+      const tokenElements = document.querySelectorAll('.token-data');
+      tokenElements.forEach(el => {
+        el.style.opacity = '1';
+        el.style.visibility = 'visible';
+      });
+  
+      // Capture the slide with visible data but without buttons
       const slideElement = document.querySelector("#roast-slide");
-      const canvas = await html2canvas(slideElement);
-      const screenshotUrl = canvas.toDataURL("image/png");
-
-      const response = await fetch(screenshotUrl);
-      const blob = await response.blob();
-
-      const formData = new FormData();
-      formData.append("media", blob, "screenshot.png");
-
-      const text = "Check out my Solana Rewind! 🔥";
-      const url = "https://solanarewind.fun";
+      const canvas = await html2canvas(slideElement, {
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#000000'
+      });
+  
+      // Show the buttons again
+      buttonsContainer.style.display = 'flex';
+  
+      // Download the image
+      const link = document.createElement('a');
+      link.download = 'solana-rewind.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+  
+      // Share on X
+      const text = "bruh, solana rewind roasted ☹️ me hard, try only if you got guts. ☠️ ";
+      const url = `https://solanarewind.fun/${publicKey}`;
       const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
         text
       )}&url=${encodeURIComponent(url)}`;
@@ -695,68 +763,74 @@ const Slide12 = ({ slideData, slides, notslide, topToken }) => {
       console.error("Error sharing:", error);
     }
   };
+  
+
 
   return (
     <div id="roast-slide" className="h-[90vh] bg-black w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
-      <img
-        src="./bluehalfbars.png"
-        className="fixed -top-6 -left-6 h-1/3 animate-pulse select-none"
-        draggable="false"
-        alt=""
-      />
-      <div className="text-center w-full px-6 z-50">
-        <h1 className="text-2xl font-bold mb-4 text-white">{title}</h1>
-        <p className="text-lg mb-6 text-white/80">{description}</p>
+    <img
+      src="./bluehalfbars.png"
+      className="fixed -top-6 -left-6 h-1/3 animate-pulse select-none"
+      draggable="false"
+      alt=""
+    />
+    <div className="text-center w-full px-6 z-50">
+      <h1 className="text-2xl font-bold mb-4 text-white">{title}</h1>
+      <p className="text-lg mb-6 text-white/80">{description}</p>
 
-        {icon && (
-          <img
-            src={icon}
-            alt={`${symbol} logo`}
-            className="h-32 w-32 mx-auto rounded-full border-4 border-white/20 mb-6"
-          />
-        )}
+      {icon && (
+        <img
+          src={icon}
+          alt={`${symbol} logo`}
+          className="token-data h-32 w-32 mx-auto rounded-full border-4 border-white/20 mb-6"
+        />
+      )}
 
-        <div className="flex justify-between items-start mb-8">
-          <div className="text-left">
-            <h2 className="font-bold text-xl text-white mb-3">Top Tokens</h2>
-            <ul className="text-base font-medium text-white/60 space-y-2">
-              {topToken?.slice(0, 3).map((token, index) => (
-                <li key={index} className="flex items-center gap-2">
-                  {token.icon && (
-                    <img src={token.icon} alt={token.symbol} className="w-6 h-6 rounded-full" />
-                  )}
-                  <span>{token.symbol}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="text-right">
-            <h2 className="font-bold text-xl text-white mb-3">Most Traded</h2>
-            <div className="flex items-center gap-2 justify-end">
-              {icon && <img src={icon} alt={symbol} className="w-6 h-6 rounded-full" />}
-              <span className="text-white/60">{symbol}</span>
-            </div>
+      <div className="flex justify-between items-start mb-8">
+        <div className="text-left token-data">
+          <h2 className="font-bold text-xl text-white mb-3">Top Tokens</h2>
+          <ul className="text-base font-medium text-white/60 space-y-2">
+            {topToken?.slice(0, 3).map((token, index) => (
+              <li key={index} className="flex items-center gap-2">
+                {token.icon && (
+                  <img src={token.icon} alt={token.symbol} className="w-6 h-6 rounded-full" />
+                )}
+                <span>{token.symbol}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="text-right token-data">
+          <h2 className="font-bold text-xl text-white mb-3">Most Traded</h2>
+          <div className="flex items-center gap-2 justify-end">
+            {icon && <img src={icon} alt={symbol} className="w-6 h-6 rounded-full" />}
+            <span className="text-white/60">{symbol}</span>
           </div>
         </div>
+      </div>
 
+      <div id="buttons-container" className="flex gap-4 justify-center">
         <button
           onClick={handleShare}
-          className="mt-4 bg-[#1DA1F2] text-white px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200 mx-auto"
+          className="mt-4 bg-[#1DA1F2] text-white px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
           </svg>
           <span className="font-medium">Share on X</span>
         </button>
+
+   
       </div>
-      
-      <img
-        src="./bluehalfbars.png"
-        className="fixed -bottom-6 rotate-180 -right-6 h-1/3 animate-pulse select-none"
-        draggable="false"
-        alt=""
-      />
     </div>
+    
+    <img
+      src="./bluehalfbars.png"
+      className="fixed -bottom-6 rotate-180 -right-6 h-1/3 animate-pulse select-none"
+      draggable="false"
+      alt=""
+    />
+  </div>
   );
 };
 

@@ -155,7 +155,7 @@ export default function WalletPage() {
 
       </Head>
 
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen flex justify-center items-center bg-black">
         <div className="max-w-[440px] mx-auto bg-black rounded-lg p-6 relative overflow-hidden">
           <img
             src="/bluehalfbars.png"
@@ -203,17 +203,14 @@ export default function WalletPage() {
 
             <button
               onClick={() => {
-                const text = "Check out my Solana Rewind! 🔥";
-                const url = `https://solanarewind.fun/wallet/${walletAddress}`;
-                const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+               
+                const shareUrl = `https://solanarewind.fun`;
                 window.open(shareUrl, "_blank");
               }}
-              className="mt-4 bg-[#1DA1F2] text-white px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200 mx-auto"
+              className="mt-4 bg-white text-black px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200 mx-auto"
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-              <span className="font-medium">Share on X</span>
+             🔥
+              <span className="font-medium ml-3">Check yours?</span>
             </button>
           </div>
           
