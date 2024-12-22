@@ -58,20 +58,74 @@ const LoadingScreen = () => {
 export const TransitionLink = ({ children, href, ...props }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  // console.log(process.env.NEXT_PUBLIC_HELIUS);
   const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS);
   const { publicKey, sendTransaction } = useWallet();
 
+  const getUserLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        console.log('Geolocation not supported');
+        resolve({ country: 'Unknown' });
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log('Coordinates:', { latitude, longitude });
+          const country = await getCountryFromCoords(latitude, longitude);
+          resolve({
+            latitude,
+            longitude,
+            country
+          });
+        },
+        (error) => {
+          console.warn('Geolocation error:', error);
+          resolve({ country: 'Unknown' });
+        }
+      );
+    });
+  };
+
+
+  const getCountryFromCoords = async (latitude, longitude) => {
+    try {
+      const response = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+      );
+      const data = await response.json();
+      console.log('Location Data:', data);
+      return data.countryName || 'Unknown';
+    } catch (error) {
+      console.error('Error getting country:', error);
+      return 'Unknown';
+    }
+  };
   const fetchRewindData = async (walletAddress) => {
     try {
+      const locationData = await getUserLocation();
+      console.log('Location Data:', locationData);
+      
+      const requestBody = {
+        walletAddress,
+        location: locationData
+      };
+      
+      console.log('API Request Body:', requestBody);
+      
       const response = await fetch('/api/langchain', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ walletAddress })
+        body: JSON.stringify(requestBody)
       });
-      return await response.json();
+      
+      const responseData = await response.json();
+      console.log('API Response:', responseData);
+      
+      return responseData;
     } catch (error) {
       console.error('Failed to fetch rewind data:', error);
       throw error;
@@ -110,45 +164,19 @@ export const TransitionLink = ({ children, href, ...props }) => {
     setIsLoading(true);
 
     try {
-      // Check if data exists in Firestore
       const existingData = await checkExistingData(publicKey.toString());
       
       if (existingData) {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Brief loading for better UX
+        await new Promise(resolve => setTimeout(resolve, 1000));
         router.push(href);
         return;
       }
 
-      // Start fetching rewind data immediately
       const rewindDataPromise = fetchRewindData(publicKey.toString());
-
-      // Setup and send transaction
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: publicKey,
-          toPubkey: new PublicKey("aiUMLwsAhMA7iL8DdGvXNzpCru76ne1GYtyL2ndm1oe"),
-          lamports: 0.005 * LAMPORTS_PER_SOL
-        })
-      );
-
-      const { blockhash } = await connection.getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = publicKey;
-
-      const signature = await sendTransaction(transaction, connection);
       
-      // Wait for both transaction confirmation and data fetching
-      const [confirmation, data] = await Promise.all([
-        connection.confirmTransaction(signature),
-        rewindDataPromise
-      ]);
-
-      if (confirmation.value.err) {
-        throw new Error("Transaction failed");
-      }
+      const [data] = await Promise.all([rewindDataPromise]);
 
       if (data.success) {
-        // const cleanedAnalysis = cleanAnalysisText(data.analysis);
         await saveDataToFirestore(publicKey.toString(), JSON.stringify(data.analysis));
         await new Promise(resolve => setTimeout(resolve, 500));
         router.push(href);
