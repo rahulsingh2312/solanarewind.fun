@@ -5,7 +5,7 @@ async function SolanaFeeTracker(walletAddress) {
         const currentTimestamp = Date.now();
         const oneYearAgo = Math.floor((currentTimestamp - (365 * 24 * 60 * 60 * 1000)) / 1000);
 
-        const response = await axios.post("https://mainnet.helius-rpc.com/?api-key=fb5ef076-69e7-4d96-82d8-2237c13aef7a", {
+        const response = await axios.post(process.env.NEXT_PUBLIC_HELIUS, {
             jsonrpc: "2.0",
             id: 1,
             method: "get-address-transactions", // Use the correct method based on Helius API

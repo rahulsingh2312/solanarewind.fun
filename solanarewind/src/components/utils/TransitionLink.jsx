@@ -58,7 +58,8 @@ const LoadingScreen = () => {
 export const TransitionLink = ({ children, href, ...props }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=fb5ef076-69e7-4d96-82d8-2237c13aef7a");
+  // console.log(process.env.NEXT_PUBLIC_HELIUS);
+  const connection = new Connection(process.env.NEXT_PUBLIC_HELIUS);
   const { publicKey, sendTransaction } = useWallet();
 
   const fetchRewindData = async (walletAddress) => {

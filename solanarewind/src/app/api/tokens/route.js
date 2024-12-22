@@ -9,7 +9,7 @@ export const runtime = 'edge';
 
 // Utility function for fee tracking (similar to the original implementation)
 class SolanaFeeTracker {
-    constructor(rpcUrl = 'https://mainnet.helius-rpc.com/?api-key=fb5ef076-69e7-4d96-82d8-2237c13aef7a') {
+    constructor(rpcUrl = process.env.NEXT_PUBLIC_HELIUS) {
         this.RPC_URL = rpcUrl;
     }
 
@@ -83,7 +83,7 @@ export async function GET(request) {
 
     try {
         // Initialize Umi with Helius RPC (replace with your API key)
-        const umi = createUmi('https://mainnet.helius-rpc.com/?api-key=fb5ef076-69e7-4d96-82d8-2237c13aef7a');
+        const umi = createUmi(process.env.NEXT_PUBLIC_HELIUS);
         const ownerPublicKey = publicKey(walletAddress);
 
         // Handle different API types

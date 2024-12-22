@@ -22,7 +22,7 @@ export async function GET(request) {
 
   try {
     // Initialize Umi with Helius RPC
-    const umi = createUmi('https://mainnet.helius-rpc.com/?api-key=fb5ef076-69e7-4d96-82d8-2237c13aef7a').use(dasApi());
+    const umi = createUmi(process.env.NEXT_PUBLIC_HELIUS).use(dasApi());
 
     // Fetch assets for the specified wallet
     const assets = await umi.rpc.getAssetsByOwner({

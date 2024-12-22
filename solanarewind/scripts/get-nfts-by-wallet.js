@@ -41,7 +41,7 @@ const summarizeNFTData = (nft) => {
 };
 
 class SolanaFeeTracker {
-    constructor(rpcUrl = 'https://mainnet.helius-rpc.com/?api-key=fb5ef076-69e7-4d96-82d8-2237c13aef7a') {
+    constructor(rpcUrl = process.env.NEXT_PUBLIC_HELIUS) {
         this.RPC_URL = rpcUrl;
         this.AVERAGE_TX_FEE = 0.000005; // 5000 lamports
     }
@@ -107,7 +107,7 @@ const NFTDataDisplay = () => {
         setError(null);
 
         try {
-            const umi = createUmi("https://mainnet.helius-rpc.com/?api-key=fb5ef076-69e7-4d96-82d8-2237c13aef7a");
+            const umi = createUmi(process.env.NEXT_PUBLIC_HELIUS);
             const ownerPublicKey = publicKey(walletPublicKey.toBase58());
             const allNFTs = await fetchAllDigitalAssetWithTokenByOwner(umi, ownerPublicKey);
             
