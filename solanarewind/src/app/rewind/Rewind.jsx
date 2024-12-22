@@ -120,33 +120,27 @@ const Page = () => {
       setItemWidth(item.offsetWidth);
     }
   }, []);
-
   useEffect(() => {
     const fetchFirestoreData = async () => {
       if (publicKey) {
         try {
           const docRef = doc(db, "walletData", publicKey.toString());
           const docSnap = await getDoc(docRef);
-          
+  
           if (docSnap.exists()) {
             const analysis = docSnap.data().analysis;
-            
-            // Parse and split into points
-            const analysisPoints = JSON.parse(analysis).split("\n\n");
-            
-            // Updated filter pattern to match both formats
-            const filteredPoints = analysisPoints.filter(point => 
-              // Match both "1. **Title**" and "**1. Title**" formats
-              /(?:\d+\.\s*\*\*|\*\*\d+\.\s*)[^*]+\*\*/.test(point)
-            );
-            
-            // Keep original formatting
-            const cleanedSlides = filteredPoints.map(point => ({
-              content: point.trim()
+            console.log(analysis , "anal") // Assuming this is a JSON string
+            const parsedAnalysis = extractContent(analysis); // Extract content
+            console.log("Parsed analysis:", parsedAnalysis);
+            // Transform extracted content into slide objects
+            const slidesData = parsedAnalysis.map((point) => ({
+              title: point.title,
+              description: point.description,
             }));
-            
-            console.log("Cleaned slides data:", cleanedSlides);
-            setSlides(cleanedSlides);
+  
+            setSlides(slidesData);
+          } else {
+            console.log("No document found for this wallet.");
           }
         } catch (error) {
           console.error("Error in fetchFirestoreData:", error);
@@ -156,8 +150,7 @@ const Page = () => {
   
     fetchFirestoreData();
   }, [publicKey]);
-
-
+  
   useEffect(() => {
     const fetchTokenData = async () => {
       if (publicKey) {
@@ -670,7 +663,7 @@ const Slide8 = ({ slideData }) => {
 const Slide9 = ({ slideData }) => {
   const containerRef = useRef();
 
-  const { title, description } = extractContent(slideData?.content);
+  const { title, description } = slideData || { title: "", description: "" };
 
   return (
     <div
@@ -997,48 +990,18 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
 };
 
 const extractContent = (content) => {
-  if (!content) return { title: "", description: "" };
+  console.log("Raw content:", content);
+  if (!content) return [];
 
-  // Case 1: Numbered titles with asterisks "**1. Title**"
-  const numberedTitleMatch = content.match(/\*\*(\d+\.\s*[^:]+)\*\*/);
-  
-  // Case 2: "**Title** - Description"
-  const dashMatch = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
-  
-  // Case 3: "**Title:** Description"
-  const colonMatch = content.match(/\*\*([^*]+)\*\*:\s*(.+)/);
-  
-  // Case 4: Description with asterisk after dash "- *Description*"
-  const descWithAsteriskMatch = content.match(/-\s*\*([^*]+)\*/);
-
-  if (numberedTitleMatch && descWithAsteriskMatch) {
-    return {
-      title: numberedTitleMatch[1].trim(),
-      description: descWithAsteriskMatch[1].trim()
-    };
+  try {
+    const parsed = JSON.parse(content);
+    const roastPoints = parsed.roastPoints || [];
+    return roastPoints.map(({ title, description }) => ({
+      title: title || "Untitled",
+      description: description || "No description provided.",
+    }));
+  } catch (error) {
+    console.error("Failed to parse JSON content:", error);
+    return [];
   }
-  
-  if (dashMatch) {
-    return {
-      title: dashMatch[1].replace(/:/g, "").trim(),
-      description: dashMatch[2].trim()
-    };
-  }
-  
-  if (colonMatch) {
-    return {
-      title: colonMatch[1].replace(/:/g, "").trim(),
-      description: colonMatch[2].trim()
-    };
-  }
-
-  // Fallback: Split by colon or dash
-  const [rawTitle, ...descParts] = (content || "").split(/[:\-]\s*/);
-  return {
-    title: rawTitle
-      .replace(/:/g, "")
-      .replace(/^\*\*|\*\*$/g, "")
-      .trim(),
-    description: descParts.join(" ").trim()
-  };
 };
