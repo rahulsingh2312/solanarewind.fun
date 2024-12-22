@@ -76,18 +76,12 @@ const Page = () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
-        setIsPlaying(false);
       } else {
-        // Use the play promise to handle autoplay restrictions
-        audioRef.current.play()
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch((error) => {
-            console.error("Audio playback failed:", error);
-            setIsPlaying(false);
-          });
+        audioRef.current.play().catch((error) => {
+          console.log("Audio playback failed:", error);
+        });
       }
+      setIsPlaying(!isPlaying);
     }
   };
   // Initialize audio
@@ -120,37 +114,38 @@ const Page = () => {
       setItemWidth(item.offsetWidth);
     }
   }, []);
+
   useEffect(() => {
     const fetchFirestoreData = async () => {
       if (publicKey) {
         try {
           const docRef = doc(db, "walletData", publicKey.toString());
           const docSnap = await getDoc(docRef);
-  
+          console.log(docSnap.data().analysis, "hi");
           if (docSnap.exists()) {
             const analysis = docSnap.data().analysis;
-            console.log(analysis , "anal") // Assuming this is a JSON string
-            const parsedAnalysis = extractContent(analysis); // Extract content
-            console.log("Parsed analysis:", parsedAnalysis);
-            // Transform extracted content into slide objects
-            const slidesData = parsedAnalysis.map((point) => ({
-              title: point.title,
-              description: point.description,
+            const analysisPoints = JSON.parse(analysis).split("\n\n");
+
+            const filteredPoints = analysisPoints.filter(
+              (point) => /^\d+\.\s\*\*[^*]+/.test(point) // Matches only lines starting with "number. **text"
+            );
+
+            const cleanedSlides = filteredPoints.map((point) => ({
+              content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "), // Removes extra `**` from title and keeps the structure.
             }));
-  
-            setSlides(slidesData);
-          } else {
-            console.log("No document found for this wallet.");
+
+            setSlides(cleanedSlides);
+            console.log("Slides from Firestore:", cleanedSlides);
           }
         } catch (error) {
-          console.error("Error in fetchFirestoreData:", error);
+          console.error("Error fetching Firestore data:", error);
         }
       }
     };
-  
+
     fetchFirestoreData();
   }, [publicKey]);
-  
+
   useEffect(() => {
     const fetchTokenData = async () => {
       if (publicKey) {
@@ -250,7 +245,7 @@ const Page = () => {
   return (
     <div className="h-screen w-screen">
       <div className="md:hidden">
-        <EmblaCarousel slides2={slides} options={OPTIONS} />
+        <EmblaCarousel slides2={SLIDES} options={OPTIONS} />
       </div>
       <div className="max-md:hidden">
         <div className="list-wrapper px-16 z-40" style={{ overflow: "hidden" }}>
@@ -663,7 +658,7 @@ const Slide8 = ({ slideData }) => {
 const Slide9 = ({ slideData }) => {
   const containerRef = useRef();
 
-  const { title, description } = slideData || { title: "", description: "" };
+  const { title, description } = extractContent(slideData?.content);
 
   return (
     <div
@@ -693,15 +688,7 @@ const Slide9 = ({ slideData }) => {
 const Slide10 = ({ slideData }) => {
   const containerRef = useRef();
 
- // Add console logs to see what data we're receiving
- console.log("Raw slideData:", slideData);
- console.log("slideData.content:", slideData?.content);
- 
- const { title, description } = extractContent(slideData?.content);
- 
- // Log the extracted content
- console.log("Extracted title:", title);
- console.log("Extracted description:", description);
+  const { title, description } = extractContent(slideData?.content);
 
   return (
     <div
@@ -990,18 +977,33 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
 };
 
 const extractContent = (content) => {
-  console.log("Raw content:", content);
-  if (!content) return [];
+  if (!content) return { title: "", description: "" };
 
-  try {
-    const parsed = JSON.parse(content);
-    const roastPoints = parsed.roastPoints || [];
-    return roastPoints.map(({ title, description }) => ({
-      title: title || "Untitled",
-      description: description || "No description provided.",
-    }));
-  } catch (error) {
-    console.error("Failed to parse JSON content:", error);
-    return [];
+  // Match patterns like "**Title** - Description"
+  const match = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
+  if (match) {
+    return {
+      title: match[1].replace(/:/g, "").trim(),
+      description: match[2].trim(),
+    };
   }
+
+  // Match patterns like "**Title:** Description"
+  const altMatch = content.match(/\*\*([^*]+)\*\*:\s*(.+)/);
+  if (altMatch) {
+    return {
+      title: altMatch[1].replace(/:/g, "").trim(),
+      description: altMatch[2].trim(),
+    };
+  }
+
+  // Fallback split method
+  const [rawTitle, ...descParts] = (content || "").split(/[:\-]\s*/);
+  return {
+    title: rawTitle
+      .replace(/:/g, "")
+      .replace(/^\*\*|\*\*$/g, "")
+      .trim(),
+    description: descParts.join(" ").trim(),
+  };
 };
