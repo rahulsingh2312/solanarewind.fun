@@ -55,12 +55,18 @@ const EmblaCarousel = (props) => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
       } else {
-        audioRef.current.play().catch((error) => {
-          console.log("Audio playback failed:", error);
-        });
+        // Use the play promise to handle autoplay restrictions
+        audioRef.current.play()
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((error) => {
+            console.error("Audio playback failed:", error);
+            setIsPlaying(false);
+          });
       }
-      setIsPlaying(!isPlaying);
     }
   };
   useEffect(() => {

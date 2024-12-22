@@ -76,12 +76,18 @@ const Page = () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
       } else {
-        audioRef.current.play().catch((error) => {
-          console.log("Audio playback failed:", error);
-        });
+        // Use the play promise to handle autoplay restrictions
+        audioRef.current.play()
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((error) => {
+            console.error("Audio playback failed:", error);
+            setIsPlaying(false);
+          });
       }
-      setIsPlaying(!isPlaying);
     }
   };
   // Initialize audio
@@ -121,30 +127,36 @@ const Page = () => {
         try {
           const docRef = doc(db, "walletData", publicKey.toString());
           const docSnap = await getDoc(docRef);
-          console.log(docSnap.data().analysis, "hi");
+          
           if (docSnap.exists()) {
             const analysis = docSnap.data().analysis;
+            
+            // Parse and split into points
             const analysisPoints = JSON.parse(analysis).split("\n\n");
-
-            const filteredPoints = analysisPoints.filter(
-              (point) => /^\d+\.\s\*\*[^*]+/.test(point) // Matches only lines starting with "number. **text"
+            
+            // Updated filter pattern to match both formats
+            const filteredPoints = analysisPoints.filter(point => 
+              // Match both "1. **Title**" and "**1. Title**" formats
+              /(?:\d+\.\s*\*\*|\*\*\d+\.\s*)[^*]+\*\*/.test(point)
             );
-
-            const cleanedSlides = filteredPoints.map((point) => ({
-              content: point.replace(/^\d+\.\s\*\*([^*]+)\*\*:\s/, "$1: "), // Removes extra `**` from title and keeps the structure.
+            
+            // Keep original formatting
+            const cleanedSlides = filteredPoints.map(point => ({
+              content: point.trim()
             }));
-
+            
+            console.log("Cleaned slides data:", cleanedSlides);
             setSlides(cleanedSlides);
-            console.log("Slides from Firestore:", cleanedSlides);
           }
         } catch (error) {
-          console.error("Error fetching Firestore data:", error);
+          console.error("Error in fetchFirestoreData:", error);
         }
       }
     };
-
+  
     fetchFirestoreData();
   }, [publicKey]);
+
 
   useEffect(() => {
     const fetchTokenData = async () => {
@@ -245,7 +257,7 @@ const Page = () => {
   return (
     <div className="h-screen w-screen">
       <div className="md:hidden">
-        <EmblaCarousel slides2={SLIDES} options={OPTIONS} />
+        <EmblaCarousel slides2={slides} options={OPTIONS} />
       </div>
       <div className="max-md:hidden">
         <div className="list-wrapper px-16 z-40" style={{ overflow: "hidden" }}>
@@ -688,7 +700,15 @@ const Slide9 = ({ slideData }) => {
 const Slide10 = ({ slideData }) => {
   const containerRef = useRef();
 
-  const { title, description } = extractContent(slideData?.content);
+ // Add console logs to see what data we're receiving
+ console.log("Raw slideData:", slideData);
+ console.log("slideData.content:", slideData?.content);
+ 
+ const { title, description } = extractContent(slideData?.content);
+ 
+ // Log the extracted content
+ console.log("Extracted title:", title);
+ console.log("Extracted description:", description);
 
   return (
     <div
@@ -979,31 +999,46 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
 const extractContent = (content) => {
   if (!content) return { title: "", description: "" };
 
-  // Match patterns like "**Title** - Description"
-  const match = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
-  if (match) {
+  // Case 1: Numbered titles with asterisks "**1. Title**"
+  const numberedTitleMatch = content.match(/\*\*(\d+\.\s*[^:]+)\*\*/);
+  
+  // Case 2: "**Title** - Description"
+  const dashMatch = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
+  
+  // Case 3: "**Title:** Description"
+  const colonMatch = content.match(/\*\*([^*]+)\*\*:\s*(.+)/);
+  
+  // Case 4: Description with asterisk after dash "- *Description*"
+  const descWithAsteriskMatch = content.match(/-\s*\*([^*]+)\*/);
+
+  if (numberedTitleMatch && descWithAsteriskMatch) {
     return {
-      title: match[1].replace(/:/g, "").trim(),
-      description: match[2].trim(),
+      title: numberedTitleMatch[1].trim(),
+      description: descWithAsteriskMatch[1].trim()
+    };
+  }
+  
+  if (dashMatch) {
+    return {
+      title: dashMatch[1].replace(/:/g, "").trim(),
+      description: dashMatch[2].trim()
+    };
+  }
+  
+  if (colonMatch) {
+    return {
+      title: colonMatch[1].replace(/:/g, "").trim(),
+      description: colonMatch[2].trim()
     };
   }
 
-  // Match patterns like "**Title:** Description"
-  const altMatch = content.match(/\*\*([^*]+)\*\*:\s*(.+)/);
-  if (altMatch) {
-    return {
-      title: altMatch[1].replace(/:/g, "").trim(),
-      description: altMatch[2].trim(),
-    };
-  }
-
-  // Fallback split method
+  // Fallback: Split by colon or dash
   const [rawTitle, ...descParts] = (content || "").split(/[:\-]\s*/);
   return {
     title: rawTitle
       .replace(/:/g, "")
       .replace(/^\*\*|\*\*$/g, "")
       .trim(),
-    description: descParts.join(" ").trim(),
+    description: descParts.join(" ").trim()
   };
 };
