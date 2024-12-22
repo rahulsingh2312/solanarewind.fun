@@ -3,7 +3,7 @@ import React, { useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useState, useEffect } from "react";
 import html2canvas from "html2canvas";
-import ShareButton from "../app/sharebutton2";
+import ShareButton from "../app/sharebutton";
 import Autoplay from "embla-carousel-autoplay";
 import { useAutoplay } from "../components/EmblaCarouselAutoplay";
 import { useAutoplayProgress } from "../components/EmblaCarouselAutoplayProgress";
@@ -18,7 +18,7 @@ import {
   PrevButton,
   usePrevNextButtons,
 } from "../components/EmblaCarouselArrowButtons";
-import { FaPause, FaPlay } from "react-icons/fa";
+import { FaMusic, FaPause, FaPlay, FaVolumeMute } from "react-icons/fa";
 
 // Initialize Firebase
 const firebaseConfig = {
@@ -28,7 +28,7 @@ const firebaseConfig = {
   storageBucket: "emoji-buy.firebasestorage.app",
   messagingSenderId: "329260816313",
   appId: "1:329260816313:web:34527cb53f22a512254868",
-  measurementId: "G-D654LZE41V"
+  measurementId: "G-D654LZE41V",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -49,7 +49,42 @@ const EmblaCarousel = (props) => {
   const [emblaRef, emblaApi] = useEmblaCarousel(options, [
     Autoplay({ playOnInit: false, delay: 7000 }),
   ]);
+  const audioRef = useRef(null); // Add audio reference
+  const [isPlaying, setIsPlaying] = useState(true);
+  const toggleAudio = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch((error) => {
+          console.log("Audio playback failed:", error);
+        });
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+  useEffect(() => {
+    audioRef.current = new Audio("/audio.mp3");
+    audioRef.current.loop = true;
 
+    const playAudio = () => {
+      if (audioRef.current) {
+        audioRef.current.play().catch((error) => {
+          console.log("Audio playback failed:", error);
+          setIsPlaying(false);
+        });
+      }
+    };
+
+    playAudio();
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
+    };
+  }, []);
   // Fetch data from Firestore
   useEffect(() => {
     const fetchFirestoreData = async () => {
@@ -57,7 +92,7 @@ const EmblaCarousel = (props) => {
         try {
           const docRef = doc(db, "walletData", publicKey.toString());
           const docSnap = await getDoc(docRef);
-          
+
           if (docSnap.exists()) {
             const analysis = docSnap.data().analysis;
             const analysisPoints = JSON.parse(analysis).split("\n\n");
@@ -149,7 +184,16 @@ const EmblaCarousel = (props) => {
     (props) => <Slide9 {...props} slideData={slides[7]} />,
     (props) => <Slide10 {...props} slideData={slides[8]} />,
     (props) => <Slide11 {...props} slideData={slides[9]} />,
-    (props) => <Slide12 {...props} slideData={slides[10]} notslide={tokenData} publicKey={publicKey?.toString()} topToken={topToken} slides={slides} />,
+    (props) => (
+      <Slide12
+        {...props}
+        slideData={slides[10]}
+        notslide={tokenData}
+        publicKey={publicKey?.toString()}
+        topToken={topToken}
+        slides={slides}
+      />
+    ),
   ];
 
   // Keyboard controls
@@ -189,28 +233,22 @@ const EmblaCarousel = (props) => {
       </div>
 
       <div className="flex flex-col-reverse items-center justify-center gap-2">
-        <div className="flex">
+        <div className="flex items-center">
           <PrevButton
             onClick={() => onAutoplayButtonClick(onPrevButtonClick)}
             disabled={prevBtnDisabled}
           />
           <button
-            className="embla__play"
-            onClick={toggleAutoplay}
-            type="button"
+            onClick={toggleAudio}
+            className="mx-auto text-sm flex gap-2 items-center justify-center h-fit z-50 bg-black/50 px-3 py-1 hover:bg-blue-800 rounded-full backdrop-blur-sm border border-white/20 hover:bg-black/70 transition-colors duration-200"
           >
-            {autoplayIsPlaying ? <FaPause /> : <FaPlay />}
+            Music
+            {isPlaying ? <FaMusic /> : <FaVolumeMute />}
           </button>
           <NextButton
             onClick={() => onAutoplayButtonClick(onNextButtonClick)}
             disabled={nextBtnDisabled}
           />
-        </div>
-
-        <div
-          className={`embla__progress`.concat(showAutoplayProgress ? "" : "")}
-        >
-          <div className="embla__progress__bar" ref={progressNode} />
         </div>
       </div>
     </div>
@@ -276,8 +314,12 @@ const Slide2 = ({ opacity = 0.5, slideData }) => {
         alt=""
       />
 
-      <h1 className="text-black text-4xl font-semibold text-center token-data">{title}</h1>
-      <p className="text-black/70 text-lg mt-2 text-center token-data">{description}</p>
+      <h1 className="text-black text-4xl font-semibold text-center token-data">
+        {title}
+      </h1>
+      <p className="text-black/70 text-lg mt-2 text-center token-data">
+        {description}
+      </p>
 
       <img
         src="./bluehalfbars.png"
@@ -302,7 +344,7 @@ const Slide3 = ({ opacity = 0.5, notslide }) => {
       className="h-full bg-black border relative rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-evenly border-zinc-800"
       style={{ opacity }}
     >
-       {/* <ShareButton containerRef={containerRef} /> */}
+      {/* <ShareButton containerRef={containerRef} /> */}
       <div className="text-center text-xl font-medium">
         Hover the box to know your favorite token!
         <div
@@ -345,7 +387,6 @@ const Slide3 = ({ opacity = 0.5, notslide }) => {
 
 const Slide4 = ({ opacity = 0.5, slideData, topToken }) => {
   const { title, description } = extractContent(slideData?.content);
-
 
   const container = useRef(null);
   const tl = useRef(null);
@@ -439,7 +480,7 @@ const Slide4 = ({ opacity = 0.5, slideData, topToken }) => {
         draggable="false"
       />
 
-      <div className="absolute top-32 text-center">
+      <div className="absolute top-10 text-center">
         <h2 className="text-2xl font-semibold text-white mb-2">{title}</h2>
         <p className="text-white/80">{description}</p>
       </div>
@@ -487,16 +528,16 @@ const Slide5 = ({ opacity = 0.5, slideData }) => {
   return (
     <div
       ref={containerRef}
-      className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
+      className="h-full bg-black px-4 flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-       {/* <ShareButton containerRef={containerRef} /> */}
+      {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./greenbars.png" className="fixed top-0" alt="" />
       <div className="h-40 w-40 bg-white rounded-xl flex items-center justify-center overflow-hidden ">
         <img src="https://c.tenor.com/CNI1fSM1XSoAAAAd/tenor.gif" alt="" />
       </div>
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
-      <p className="text-white/80 text-md">{description}</p>
+      <p className="text-white/80  text-md">{description}</p>
       <img src="./greenbars.png" className="fixed bottom-0 rotate-180" alt="" />
     </div>
   );
@@ -505,16 +546,15 @@ const Slide5 = ({ opacity = 0.5, slideData }) => {
 const Slide6 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
-
   const containerRef = useRef();
 
   return (
     <div
       ref={containerRef}
-      className="h-full bg-[#F50000] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
+      className="h-full bg-[#F50000] border px-4 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
       style={{ opacity }}
     >
-       {/* <ShareButton containerRef={containerRef} /> */}
+      {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./bluebars.png" className="fixed -top-20" alt="" />
       <img
         src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYzZtMndqYzNvazd1eG94Zmd2bHl1NDh6dXVpaHMyb2J2enJteWJvMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wr7oA0rSjnWuiLJOY5/giphy.gif
@@ -543,7 +583,7 @@ const Slide7 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-black border border-gray-900 overflow-hidden flex flex-col items-center justify-center rounded-lg embla__slide"
       style={{ opacity }}
     >
-       {/* <ShareButton containerRef={containerRef} /> */}
+      {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./yellowbars.png" className="fixed -top-20  " alt="" />
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white ">{title}</h1>
       <p className="text-white/80 text-md max-w-80">{description}</p>
@@ -559,7 +599,6 @@ const Slide7 = ({ opacity = 0.5, slideData }) => {
 const Slide8 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
-
   const containerRef = useRef();
 
   return (
@@ -568,7 +607,7 @@ const Slide8 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-       {/* <ShareButton containerRef={containerRef} /> */}
+      {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./greenbars.png" className="fixed top-0" alt="" />
 
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
@@ -580,7 +619,6 @@ const Slide8 = ({ opacity = 0.5, slideData }) => {
 const Slide9 = ({ opacity = 0.5, slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
-
   const containerRef = useRef();
 
   return (
@@ -589,7 +627,7 @@ const Slide9 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-[#00f500] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
       style={{ opacity }}
     >
-       {/* <ShareButton containerRef={containerRef} /> */}
+      {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./bluebars.png" className="fixed -top-20" alt="" />
       <img
         src="https://s3.coinmarketcap.com/static-gravity/image/4dc5810324c74688a5a1b805f7506ec5.jpg
@@ -619,7 +657,7 @@ const Slide10 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-       {/* <ShareButton containerRef={containerRef} /> */}
+      {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./greenbars.png" className="fixed top-0" alt="" />
 
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
@@ -638,7 +676,7 @@ const Slide11 = ({ opacity = 0.5, slideData }) => {
       className="h-full bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
       style={{ opacity }}
     >
-       {/* <ShareButton containerRef={containerRef} /> */}
+      {/* <ShareButton containerRef={containerRef} /> */}
       <img src="./bluebars.png" className="fixed top-0" alt="" />
 
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
@@ -657,13 +695,15 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
       if (lastSlide?.content) {
         // Look for the conclusion section
         if (lastSlide.content.includes("Conclusion:")) {
-          const conclusionPart = lastSlide.content.split("Conclusion:")[1].trim();
+          const conclusionPart = lastSlide.content
+            .split("Conclusion:")[1]
+            .trim();
           // Extract title and description
           const titleMatch = conclusionPart.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
           if (titleMatch) {
             return {
               title: titleMatch[1].trim(),
-              description: titleMatch[2].trim()
+              description: titleMatch[2].trim(),
             };
           }
         }
@@ -671,28 +711,30 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
     }
 
     // If we can't find it in the last slide, search through all slides
-    const conclusionSlide = slides?.find(slide => 
-      slide?.content?.includes("### Conclusion:") || 
-      slide?.content?.includes("Conclusion:")
+    const conclusionSlide = slides?.find(
+      (slide) =>
+        slide?.content?.includes("### Conclusion:") ||
+        slide?.content?.includes("Conclusion:")
     );
 
     if (conclusionSlide?.content) {
       const content = conclusionSlide.content;
       // Try to match the format "**Title** - Description"
       const titleMatch = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
-      
+
       if (titleMatch) {
         return {
           title: titleMatch[1].trim(),
-          description: titleMatch[2].trim()
+          description: titleMatch[2].trim(),
         };
       }
     }
 
     // If we still can't find it, try to find any title in the analysis
-    const titleSlide = slides?.find(slide => 
-      slide?.content?.includes("Title:") || 
-      slide?.content?.includes("**Title:")
+    const titleSlide = slides?.find(
+      (slide) =>
+        slide?.content?.includes("Title:") ||
+        slide?.content?.includes("**Title:")
     );
 
     if (titleSlide?.content) {
@@ -700,7 +742,9 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
       if (titleMatch) {
         return {
           title: titleMatch[1].trim(),
-          description: titleSlide.content.split('-')[1]?.trim() || "Your year in review on Solana"
+          description:
+            titleSlide.content.split("-")[1]?.trim() ||
+            "Your year in review on Solana",
         };
       }
     }
@@ -708,29 +752,30 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
     // Fallback values
     return {
       title: "The Wallet of Woe",
-      description: "Your saga of crypto adventures, featuring missed opportunities, questionable decisions, and a collection of tokens that tell quite a story."
+      description:
+        "Your saga of crypto adventures, featuring missed opportunities, questionable decisions, and a collection of tokens that tell quite a story.",
     };
   };
 
   console.log("Slides data:", slides); // Debug log
   const { title, description } = getConclusionContent(slides);
   console.log("Parsed conclusion:", { title, description }); // Debug log
-  
+
   const { symbol, icon } = notslide || { symbol: "", icon: "" };
 
   const handleShare = async () => {
     try {
       // First, hide just the buttons container
-      const buttonsContainer = document.querySelector('#buttons-container');
-      buttonsContainer.style.display = 'none';
-  
+      const buttonsContainer = document.querySelector("#buttons-container");
+      buttonsContainer.style.display = "none";
+
       // Force token data to be visible
-      const tokenElements = document.querySelectorAll('.token-data');
-      tokenElements.forEach(el => {
-        el.style.opacity = '1';
-        el.style.visibility = 'visible';
+      const tokenElements = document.querySelectorAll(".token-data");
+      tokenElements.forEach((el) => {
+        el.style.opacity = "1";
+        el.style.visibility = "visible";
       });
-  
+
       // Capture the slide with visible data but without buttons
       const slideElement = document.querySelector("#roast-slide");
       const canvas = await html2canvas(slideElement, {
@@ -738,78 +783,85 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
         logging: false,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#000000'
+        backgroundColor: "#000000",
       });
-  
+
       // Show the buttons again
-      buttonsContainer.style.display = 'flex';
-  
+      buttonsContainer.style.display = "flex";
+
       // Download the image
-      const link = document.createElement('a');
-      link.download = 'solana-rewind.png';
-      link.href = canvas.toDataURL('image/png');
+      const link = document.createElement("a");
+      link.download = "solana-rewind.png";
+      link.href = canvas.toDataURL("image/png");
       link.click();
-  
+
       // Share on X
-      const text = "bruh, solana rewind roasted ☹️ me hard, try only if you got guts. ☠️ ";
+      const text =
+        "bruh, solana rewind roasted ☹️ me hard, try only if you got guts. ☠️ ";
       const url = `https://solanarewind.fun/${publicKey}`;
       const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
         text
       )}&url=${encodeURIComponent(url)}`;
       if (typeof window !== "undefined") {
-
-      window.open(shareUrl, "_blank");
+        window.open(shareUrl, "_blank");
       }
     } catch (error) {
       console.error("Error sharing:", error);
     }
   };
-  
-
 
   const containerRef = useRef();
 
   return (
     <div
-      ref={containerRef} id="roast-slide" className="h-[90vh] bg-black w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
-    {/* <ShareButton containerRef={containerRef} /> */}
-    <img src="./greenbars.png" className="fixed top-0" alt="" />
-    <div className="text-center w-full px-6 z-50">
-      <h1 className="text-2xl font-bold mb-4 text-white">{title}</h1>
-      <p className="text-lg mb-6 text-white/80">{description}</p>
+      ref={containerRef}
+      id="roast-slide"
+      className="h-[90vh] bg-black w-[440px] rounded-xl embla__slide p-6 overflow-hidden flex flex-col items-center justify-center"
+    >
+      <ShareButton containerRef={containerRef} />
+      <img src="./greenbars.png" className="fixed top-0 rounded-xl" alt="" />
+      <div className="text-center w-full px-6 z-50">
+        <h1 className="text-2xl font-bold mb-4 text-white">{title}</h1>
+        <p className="text-lg mb-6 text-white/80">{description}</p>
 
-      {icon && (
-        <img
-          src={icon}
-          alt={`${symbol} logo`}
-          className="token-data h-32 w-32 mx-auto rounded-full border-4 border-white/20 mb-6"
-        />
-      )}
+        {icon && (
+          <img
+            src={icon}
+            alt={`${symbol} logo`}
+            className="token-data h-32 w-32 mx-auto rounded-full border-4 border-white/20 mb-6"
+          />
+        )}
 
-      <div className="flex justify-between items-start mb-8">
-        <div className="text-left token-data">
-          <h2 className="font-bold text-xl text-white mb-3">Top Tokens</h2>
-          <ul className="text-base font-medium text-white/60 space-y-2">
-            {topToken?.slice(0, 3).map((token, index) => (
-              <li key={index} className="flex items-center gap-2">
-                {token.icon && (
-                  <img src={token.icon} alt={token.symbol} className="w-6 h-6 rounded-full" />
-                )}
-                <span>{token.symbol}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="text-right token-data">
-          <h2 className="font-bold text-xl text-white mb-3">Most Traded</h2>
-          <div className="flex items-center gap-2 justify-end">
-            {icon && <img src={icon} alt={symbol} className="w-6 h-6 rounded-full" />}
-            <span className="text-white/60">{symbol}</span>
+        <div className="flex justify-between items-start mb-8">
+          <div className="text-left token-data">
+            <h2 className="font-bold text-xl text-white mb-3">Top Tokens</h2>
+            <ul className="text-base font-medium text-white/60 space-y-2">
+              {topToken?.slice(0, 3).map((token, index) => (
+                <li key={index} className="flex items-center gap-2">
+                  {token.icon && (
+                    <img
+                      src={token.icon}
+                      alt={token.symbol}
+                      className="w-6 h-6 rounded-full"
+                    />
+                  )}
+                  <span>{token.symbol}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="text-right token-data">
+            <h2 className="font-bold text-xl text-white mb-3">Most Traded</h2>
+            <div className="flex items-center gap-2 justify-end">
+              {icon && (
+                <img src={icon} alt={symbol} className="w-6 h-6 rounded-full" />
+              )}
+              <span className="text-white/60">{symbol}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* <div id="buttons-container" className="flex gap-4 justify-center">
+        {/* <div id="buttons-container" className="flex gap-4 justify-center">
         <button
           onClick={handleShare}
           className="mt-4 bg-[#1DA1F2] text-white px-8 py-3 rounded-full flex items-center space-x-2 hover:bg-[#1a91da] transition-colors duration-200"
@@ -822,38 +874,45 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
 
    
       </div> */}
-    </div>
-    
-    <img src="./greenbars.png" className="fixed bottom-0 rotate-180" alt="" />
+      </div>
+
+      <img
+        src="./greenbars.png"
+        className="fixed bottom-0 rounded-xl rotate-180"
+        alt=""
+      />
     </div>
   );
 };
 
 const extractContent = (content) => {
   if (!content) return { title: "", description: "" };
-  
+
   // Match patterns like "**Title** - Description"
   const match = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
   if (match) {
     return {
       title: match[1].replace(/:/g, "").trim(),
-      description: match[2].trim()
+      description: match[2].trim(),
     };
   }
-  
+
   // Match patterns like "**Title:** Description"
   const altMatch = content.match(/\*\*([^*]+)\*\*:\s*(.+)/);
   if (altMatch) {
     return {
       title: altMatch[1].replace(/:/g, "").trim(),
-      description: altMatch[2].trim()
+      description: altMatch[2].trim(),
     };
   }
-  
+
   // Fallback split method
   const [rawTitle, ...descParts] = (content || "").split(/[:\-]\s*/);
   return {
-    title: rawTitle.replace(/:/g, "").replace(/^\*\*|\*\*$/g, "").trim(),
-    description: descParts.join(" ").trim()
+    title: rawTitle
+      .replace(/:/g, "")
+      .replace(/^\*\*|\*\*$/g, "")
+      .trim(),
+    description: descParts.join(" ").trim(),
   };
 };

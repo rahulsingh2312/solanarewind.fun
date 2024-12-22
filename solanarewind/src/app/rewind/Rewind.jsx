@@ -1,9 +1,15 @@
 "use client";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc  , setDoc , updateDoc} from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 import html2canvas from "html2canvas";
 import ShareButton from "../sharebutton";
-import React, { useState, useMemo, useEffect , useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Starfield from "../../components/starField";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import TransactionTracker from "../test";
@@ -15,6 +21,7 @@ import {
   WalletProvider,
   useWallet,
 } from "@solana/wallet-adapter-react";
+import { FaMusic, FaVolumeMute } from "react-icons/fa";
 import axios from "axios";
 import {
   WalletModalProvider,
@@ -61,30 +68,30 @@ const Page = () => {
   const [tokenData, setTokenData] = useState({ symbol: "", icon: "" });
   const { publicKey } = useWallet();
 
-  const audioRef = useRef(null);  // Add audio reference
+  const audioRef = useRef(null); // Add audio reference
   const [isPlaying, setIsPlaying] = useState(true);
 
- // Audio toggle function
- const toggleAudio = () => {
-  if (audioRef.current) {
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play().catch(error => {
-        console.log("Audio playback failed:", error);
-      });
+  // Audio toggle function
+  const toggleAudio = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch((error) => {
+          console.log("Audio playback failed:", error);
+        });
+      }
+      setIsPlaying(!isPlaying);
     }
-    setIsPlaying(!isPlaying);
-  }
-};
+  };
   // Initialize audio
   useEffect(() => {
-    audioRef.current = new Audio('/audio.mp3');
+    audioRef.current = new Audio("/audio.mp3");
     audioRef.current.loop = true;
-    
+
     const playAudio = () => {
       if (audioRef.current) {
-        audioRef.current.play().catch(error => {
+        audioRef.current.play().catch((error) => {
           console.log("Audio playback failed:", error);
           setIsPlaying(false);
         });
@@ -96,12 +103,11 @@ const Page = () => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.src = '';
+        audioRef.current.src = "";
       }
     };
   }, []);
 
-    
   useEffect(() => {
     const item = document.querySelector(".item");
     if (item) {
@@ -149,23 +155,20 @@ const Page = () => {
           );
 
           const { bagholder } = response.data.data.bagholder;
-          const topTokens = response?.data?.data?.currentHoldings?.top_tokens || [];
-
+          const topTokens =
+            response?.data?.data?.currentHoldings?.top_tokens || [];
 
           const tokenData = {
             mostTraded: {
               symbol: response?.data.data.bagholder?.symbol,
               icon: response?.data.data.bagholder?.icon,
             },
-            topThreeTokens: topTokens.slice(0, 3).map(token => ({
+            topThreeTokens: topTokens.slice(0, 3).map((token) => ({
               symbol: token.symbol,
               icon: token.icon,
-              address: token.address
-            }))
+              address: token.address,
+            })),
           };
-
-
-
 
           setTokenData({
             symbol: response?.data.data.bagholder?.symbol,
@@ -173,26 +176,25 @@ const Page = () => {
           });
           setTopToken(response?.data?.data?.currentHoldings?.top_tokens || []);
 
-         
- // Get existing document
- const docRef = doc(db, "walletData", publicKey?.toString());
- const docSnap = await getDoc(docRef);
+          // Get existing document
+          const docRef = doc(db, "walletData", publicKey?.toString());
+          const docSnap = await getDoc(docRef);
 
- if (docSnap.exists()) {
-   // Update existing document with token data
-   await updateDoc(docRef, {
-     tokenData: tokenData,
-     lastUpdated: new Date().toISOString()
-   });
- } else {
-   // Create new document with both analysis and token data
-   await setDoc(docRef, {
-     tokenData: tokenData,
-     lastUpdated: new Date().toISOString()
-   });
- }
+          if (docSnap.exists()) {
+            // Update existing document with token data
+            await updateDoc(docRef, {
+              tokenData: tokenData,
+              lastUpdated: new Date().toISOString(),
+            });
+          } else {
+            // Create new document with both analysis and token data
+            await setDoc(docRef, {
+              tokenData: tokenData,
+              lastUpdated: new Date().toISOString(),
+            });
+          }
 
-           // Prepare token data
+          // Prepare token data
         } catch (error) {
           console.error("Error fetching token data:", error);
         }
@@ -228,17 +230,20 @@ const Page = () => {
     (props) => <Slide9 {...props} slideData={slides[7]} />,
     (props) => <Slide10 {...props} slideData={slides[8]} />,
     (props) => <Slide11 {...props} slideData={slides[9]} />,
-    (props) => <Slide12 {...props} slideData={slides[10]} notslide={tokenData} publicKey={publicKey?.toString()} topToken={topToken} slides={slides} />,
+    (props) => (
+      <Slide12
+        {...props}
+        slideData={slides[10]}
+        notslide={tokenData}
+        publicKey={publicKey?.toString()}
+        topToken={topToken}
+        slides={slides}
+      />
+    ),
   ];
 
   return (
     <div className="h-screen w-screen">
-        <button 
-        onClick={toggleAudio}
-        className="fixed bottom-4 left-4 text-4xl z-50 bg-black/50 p-4 rounded-full backdrop-blur-sm border border-white/20 hover:bg-black/70 transition-colors duration-200"
-      >
-        {isPlaying ? '🔊' : '🔇'}
-      </button>
       <div className="md:hidden">
         <EmblaCarousel slides2={SLIDES} options={OPTIONS} />
       </div>
@@ -272,6 +277,13 @@ const Page = () => {
             onClick={handlePrev}
           >
             <FaChevronLeft className="rotate-180" />
+          </button>
+          <button
+            onClick={toggleAudio}
+            className="fixed  flex items-center justify-center mx-auto gap-3 bottom-4 text-2xl right-14 z-50 bg-black/50 px-4 py-1 hover:bg-blue-800 rounded-full backdrop-blur-sm border border-white/20 hover:bg-black/70 transition-colors duration-200"
+          >
+            Music
+            {isPlaying ? <FaMusic /> : <FaVolumeMute />}
           </button>
           <button
             className="button button--next bg-black/50 rounded-full flex items-center justify-center backdrop-blur-sm border"
@@ -337,8 +349,9 @@ const Slide2 = ({ slideData }) => {
 
   return (
     <div
-    ref={containerRef}
-    className="h-[90vh] bg-[#FEF102] w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center">
+      ref={containerRef}
+      className="h-[90vh] bg-[#FEF102] w-[440px] rounded-lg embla__slide p-6 overflow-hidden flex flex-col items-center justify-center"
+    >
       <ShareButton containerRef={containerRef} />
       <img
         src="./bluehalfbars.png"
@@ -372,9 +385,10 @@ const Slide3 = ({ notslide }) => {
 
   return (
     <div
-    ref={containerRef}
-    className="h-[90vh] w-[440px] bg-[#161616] p-2 border relative rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-evenly border-zinc-800">
-       <ShareButton containerRef={containerRef} />
+      ref={containerRef}
+      className="h-[90vh] w-[440px] bg-[#161616] p-2 border relative rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-evenly border-zinc-800"
+    >
+      <ShareButton containerRef={containerRef} />
       <div className="text-center text-xl font-medium">
         Hover the box to know your favorite token!
         <div
@@ -422,7 +436,6 @@ const Slide4 = ({ slideData, topToken }) => {
   const containerRef = useRef();
 
   const { title, description } = extractContent(slideData?.content);
-
 
   const container = useRef(null);
   const tl = useRef(null);
@@ -498,9 +511,10 @@ const Slide4 = ({ slideData, topToken }) => {
 
   return (
     <div
-    ref={containerRef}
-    className="h-[90vh] w-[440px] bg-[#00ADF1] border rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900 relative">
-       {/* <ShareButton containerRef={containerRef} /> */}
+      ref={containerRef}
+      className="h-[90vh] w-[440px] bg-[#00ADF1] border rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900 relative"
+    >
+      {/* <ShareButton containerRef={containerRef} /> */}
       <img
         src="./redBar.png"
         alt=""
@@ -527,7 +541,6 @@ const Slide4 = ({ slideData, topToken }) => {
         ref={container}
         className="relative flex justify-center items-center h-48"
       >
-       
         <div className="flex flex-col gap-8">
           {topToken?.map((token, index) => (
             <div
@@ -557,9 +570,10 @@ const Slide5 = ({ slideData }) => {
 
   return (
     <div
-    ref={containerRef}
-    className="h-[90vh] w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide">
-     <ShareButton containerRef={containerRef} />
+      ref={containerRef}
+      className="h-[90vh] w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
+    >
+      <ShareButton containerRef={containerRef} />
       <img src="./greenbars.png" className="fixed top-0" alt="" />
       <div className="h-40 w-40 bg-white rounded-xl flex items-center justify-center overflow-hidden ">
         <img src="https://c.tenor.com/CNI1fSM1XSoAAAAd/tenor.gif" alt="" />
@@ -578,11 +592,12 @@ const Slide6 = ({ slideData }) => {
 
   return (
     <div
-    ref={containerRef}
-    className="h-[90vh] w-[440px] bg-[#F50000] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900">
-       <ShareButton containerRef={containerRef} />
+      ref={containerRef}
+      className="h-[90vh] w-[440px] bg-[#F50000] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
+    >
+      <ShareButton containerRef={containerRef} />
       <img src="./bluebars.png" className="fixed -top-20" alt="" />
-     
+
       <img
         src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYzZtMndqYzNvazd1eG94Zmd2bHl1NDh6dXVpaHMyb2J2enJteWJvMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wr7oA0rSjnWuiLJOY5/giphy.gif
 "
@@ -606,9 +621,9 @@ const Slide7 = ({ slideData }) => {
 
   return (
     <div
-    
-    ref={containerRef}
-    className="h-[90vh] w-[440px] bg-black borderborder border-gray-900 overflow-hidden flex flex-col items-center justify-center rounded-lg embla__slide">
+      ref={containerRef}
+      className="h-[90vh] w-[440px] bg-black borderborder border-gray-900 overflow-hidden flex flex-col items-center justify-center rounded-lg embla__slide"
+    >
       <ShareButton containerRef={containerRef} />
       <img src="./yellowbars.png" className="fixed -top-20  " alt="" />
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white ">{title}</h1>
@@ -626,9 +641,10 @@ const Slide8 = ({ slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
   return (
-    <div 
-    ref={containerRef}
-    className="h-[90vh] w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide">
+    <div
+      ref={containerRef}
+      className="h-[90vh] w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
+    >
       <ShareButton containerRef={containerRef} />
       <img src="./greenbars.png" className="fixed top-0" alt="" />
 
@@ -646,9 +662,10 @@ const Slide9 = ({ slideData }) => {
 
   return (
     <div
-    ref={containerRef}
-    className="h-[90vh] w-[440px] bg-[#00f500] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900">
-     <ShareButton containerRef={containerRef} />
+      ref={containerRef}
+      className="h-[90vh] w-[440px] bg-[#00f500] border px-2 rounded-lg embla__slide overflow-hidden flex flex-col items-center justify-center border-gray-900"
+    >
+      <ShareButton containerRef={containerRef} />
 
       <img src="./bluebars.png" className="fixed -top-20" alt="" />
       <img
@@ -675,9 +692,10 @@ const Slide10 = ({ slideData }) => {
 
   return (
     <div
-    ref={containerRef}
-    className="h-[90vh] w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide">
-       <ShareButton containerRef={containerRef} />
+      ref={containerRef}
+      className="h-[90vh] w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
+    >
+      <ShareButton containerRef={containerRef} />
       <img src="./greenbars.png" className="fixed top-0" alt="" />
 
       <h1 className="font-bold text-5xl mb-2 mt-4 text-white">{title}</h1>
@@ -691,10 +709,11 @@ const Slide11 = ({ slideData }) => {
   const { title, description } = extractContent(slideData?.content);
 
   return (
-    <div 
-    ref={containerRef}
-    className="h-[90vh]  w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide">
-           <ShareButton containerRef={containerRef} />
+    <div
+      ref={containerRef}
+      className="h-[90vh]  w-[440px] bg-black flex flex-col justify-center items-center border border-gray-800 overflow-hidden rounded-lg embla__slide"
+    >
+      <ShareButton containerRef={containerRef} />
 
       <img src="./bluebars.png" className="fixed top-0" alt="" />
 
@@ -705,14 +724,11 @@ const Slide11 = ({ slideData }) => {
   );
 };
 
-
-
 const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
   const componentRef = useRef();
   const contentRef = useRef();
   const [isExporting, setIsExporting] = useState(false);
   const [isShared, setIsShared] = useState(false);
-
 
   // ... keeping getConclusionContent and other existing functions ...
   const getConclusionContent = (slides) => {
@@ -721,38 +737,42 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
       const lastSlide = slides[slides.length - 1];
       if (lastSlide?.content) {
         if (lastSlide.content.includes("Conclusion:")) {
-          const conclusionPart = lastSlide.content.split("Conclusion:")[1].trim();
+          const conclusionPart = lastSlide.content
+            .split("Conclusion:")[1]
+            .trim();
           const titleMatch = conclusionPart.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
           if (titleMatch) {
             return {
               title: titleMatch[1].trim(),
-              description: titleMatch[2].trim()
+              description: titleMatch[2].trim(),
             };
           }
         }
       }
     }
 
-    const conclusionSlide = slides?.find(slide => 
-      slide?.content?.includes("### Conclusion:") || 
-      slide?.content?.includes("Conclusion:")
+    const conclusionSlide = slides?.find(
+      (slide) =>
+        slide?.content?.includes("### Conclusion:") ||
+        slide?.content?.includes("Conclusion:")
     );
 
     if (conclusionSlide?.content) {
       const content = conclusionSlide.content;
       const titleMatch = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
-      
+
       if (titleMatch) {
         return {
           title: titleMatch[1].trim(),
-          description: titleMatch[2].trim()
+          description: titleMatch[2].trim(),
         };
       }
     }
 
-    const titleSlide = slides?.find(slide => 
-      slide?.content?.includes("Title:") || 
-      slide?.content?.includes("**Title:")
+    const titleSlide = slides?.find(
+      (slide) =>
+        slide?.content?.includes("Title:") ||
+        slide?.content?.includes("**Title:")
     );
 
     if (titleSlide?.content) {
@@ -760,14 +780,17 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
       if (titleMatch) {
         return {
           title: titleMatch[1].trim(),
-          description: titleSlide.content.split('-')[1]?.trim() || "Your year in review on Solana"
+          description:
+            titleSlide.content.split("-")[1]?.trim() ||
+            "Your year in review on Solana",
         };
       }
     }
 
     return {
       title: "The Wallet of Woe",
-      description: "Your saga of crypto adventures, featuring missed opportunities, questionable decisions, and a collection of tokens that tell quite a story."
+      description:
+        "Your saga of crypto adventures, featuring missed opportunities, questionable decisions, and a collection of tokens that tell quite a story.",
     };
   };
 
@@ -776,41 +799,45 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
 
   const handleShare = async () => {
     if (isExporting) return;
-    
+
     try {
       setIsExporting(true);
 
       // Temporarily hide the button for screenshot
-      const shareButton = componentRef.current.querySelector('#share-button');
+      const shareButton = componentRef.current.querySelector("#share-button");
       const originalDisplay = shareButton.style.display;
-      shareButton.style.display = 'none';
+      shareButton.style.display = "none";
 
       // Show all content for screenshot
-      const elements = componentRef.current.querySelectorAll('.token-data, .content-element');
-      elements.forEach(el => {
-        el.style.opacity = '1';
-        el.style.visibility = 'visible';
+      const elements = componentRef.current.querySelectorAll(
+        ".token-data, .content-element"
+      );
+      elements.forEach((el) => {
+        el.style.opacity = "1";
+        el.style.visibility = "visible";
       });
 
       // Wait for images to load
-      const images = componentRef.current.getElementsByTagName('img');
-      await Promise.all(Array.from(images).map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise((resolve) => {
-          img.onload = resolve;
-          img.onerror = resolve;
-        });
-      }));
+      const images = componentRef.current.getElementsByTagName("img");
+      await Promise.all(
+        Array.from(images).map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        })
+      );
 
       // Create canvas
       const canvas = await html2canvas(componentRef.current, {
-        backgroundColor: '#000000',
+        backgroundColor: "#000000",
         scale: 2,
         useCORS: true,
         allowTaint: true,
         width: 440,
         height: Math.max(600, componentRef.current.offsetHeight),
-        logging: false
+        logging: false,
       });
 
       // Restore button display
@@ -821,33 +848,36 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
         if (blob) {
           try {
             // Create file from blob
-            const file = new File([blob], 'solana-rewind.png', { type: 'image/png' });
-            
+            const file = new File([blob], "solana-rewind.png", {
+              type: "image/png",
+            });
+
             // Share text
-            const shareText = "bruh, solana rewind roasted me hard, try only if you got guts.\nhttps://solanarewind.fun/";
+            const shareText =
+              "bruh, solana rewind roasted me hard, try only if you got guts.\nhttps://solanarewind.fun/";
             const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.download = 'solana-rewind.png';
+            const link = document.createElement("a");
+            link.download = "solana-rewind.png";
             link.href = url;
             link.click();
             URL.revokeObjectURL(url);
-          
-              // Fallback to X share
-              // const url = URL.createObjectURL(blob);
-              const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
-              if (typeof window !== "undefined") {
 
-              window.open(tweetUrl, '_blank');
-              }
-              // URL.revokeObjectURL(url);
-            
+            // Fallback to X share
+            // const url = URL.createObjectURL(blob);
+            const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+              shareText
+            )}`;
+            if (typeof window !== "undefined") {
+              window.open(tweetUrl, "_blank");
+            }
+            // URL.revokeObjectURL(url);
+
             setIsShared(true);
           } catch (error) {
             console.error("Error sharing:", error);
           }
         }
-      }, 'image/png');
-
+      }, "image/png");
     } catch (error) {
       console.error("Error exporting image:", error);
     } finally {
@@ -856,11 +886,11 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
   };
 
   return (
-    <div 
+    <div
       ref={componentRef}
-      id="roast-slide" 
+      id="roast-slide"
       className="relative h-[90vh] bg-black w-[440px] rounded-lg p-6 flex flex-col items-center justify-center content-element"
-      style={{ minHeight: '600px' }}
+      style={{ minHeight: "600px" }}
     >
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden">
@@ -885,10 +915,10 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
           onClick={handleShare}
           disabled={isExporting}
           className={`bg-[#1DA1F2] text-white px-6 py-2 rounded-full text-sm transition-colors duration-200 ${
-            isExporting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#1a91da]'
+            isExporting ? "opacity-50 cursor-not-allowed" : "hover:bg-[#1a91da]"
           }`}
         >
-          {isExporting ? 'Processing...' : 'Share on X'}
+          {isExporting ? "Processing..." : "Share on X"}
         </button>
       </div>
 
@@ -914,9 +944,9 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
               {topToken?.slice(0, 3).map((token, index) => (
                 <li key={index} className="flex items-center gap-2">
                   {token.icon && (
-                    <img 
-                      src={token.icon} 
-                      alt={token.symbol} 
+                    <img
+                      src={token.icon}
+                      alt={token.symbol}
                       className="w-6 h-6 rounded-full"
                       crossOrigin="anonymous"
                     />
@@ -930,11 +960,11 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
             <h2 className="font-bold text-xl text-white mb-3">Most Traded</h2>
             <div className="flex items-center gap-2 justify-end">
               {icon && (
-                <img 
-                  src={icon} 
-                  alt={symbol} 
+                <img
+                  src={icon}
+                  alt={symbol}
                   className="w-6 h-6 rounded-full"
-                  crossOrigin="anonymous" 
+                  crossOrigin="anonymous"
                 />
               )}
               <span className="text-white/60">{symbol}</span>
@@ -946,32 +976,34 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
   );
 };
 
-
 const extractContent = (content) => {
   if (!content) return { title: "", description: "" };
-  
+
   // Match patterns like "**Title** - Description"
   const match = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
   if (match) {
     return {
       title: match[1].replace(/:/g, "").trim(),
-      description: match[2].trim()
+      description: match[2].trim(),
     };
   }
-  
+
   // Match patterns like "**Title:** Description"
   const altMatch = content.match(/\*\*([^*]+)\*\*:\s*(.+)/);
   if (altMatch) {
     return {
       title: altMatch[1].replace(/:/g, "").trim(),
-      description: altMatch[2].trim()
+      description: altMatch[2].trim(),
     };
   }
-  
+
   // Fallback split method
   const [rawTitle, ...descParts] = (content || "").split(/[:\-]\s*/);
   return {
-    title: rawTitle.replace(/:/g, "").replace(/^\*\*|\*\*$/g, "").trim(),
-    description: descParts.join(" ").trim()
+    title: rawTitle
+      .replace(/:/g, "")
+      .replace(/^\*\*|\*\*$/g, "")
+      .trim(),
+    description: descParts.join(" ").trim(),
   };
 };
