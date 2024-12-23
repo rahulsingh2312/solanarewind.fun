@@ -70,57 +70,47 @@ const Page = () => {
   const [tokenData, setTokenData] = useState({ symbol: "", icon: "" });
   const { publicKey } = useWallet();
 
-  const audioRef = useRef(null); // Add audio reference
-  const [isPlaying, setIsPlaying] = useState(true);
+  const audioRef = useRef(null); // Reference for audio element
+  const [isPlaying, setIsPlaying] = useState(false); // Initial state: not playing
 
-  // Audio toggle function
+  // Toggle audio playback
   const toggleAudio = () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
-        // Use the play promise to handle autoplay restrictions
-        audioRef.current.play()
-          .then(() => {
-            setIsPlaying(true);
-          })
+        audioRef.current
+          .play()
+          .then(() => setIsPlaying(true))
           .catch((error) => {
             console.error("Audio playback failed:", error);
-            setIsPlaying(false);
           });
       }
     }
   };
-  // Initialize audio
+
+  // Initialize audio on mount
   useEffect(() => {
     audioRef.current = new Audio("/audio.mp3");
     audioRef.current.loop = true;
 
-    const playAudio = () => {
-      if (audioRef.current) {
-        audioRef.current.play().catch((error) => {
-          console.log("Audio playback failed:", error);
-          setIsPlaying(false);
-        });
-      }
-    };
+    // Optional: Automatically start playing on mount
+    audioRef.current
+      .play()
+      .then(() => setIsPlaying(true))
+      .catch((error) => {
+        console.error("Audio playback failed:", error);
+      });
 
-    playAudio();
-
+    // Cleanup on unmount
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = "";
+        audioRef.current = null;
       }
     };
-  }, []);
-
-  useEffect(() => {
-    const item = document.querySelector(".item");
-    if (item) {
-      setItemWidth(item.offsetWidth);
-    }
   }, []);
 
   useEffect(() => {
@@ -129,25 +119,25 @@ const Page = () => {
         try {
           const docRef = doc(db, "walletData", publicKey.toString());
           const docSnap = await getDoc(docRef);
-          
+
           if (docSnap.exists()) {
             const analysis = docSnap.data().analysis;
-            
+
             // Parse and split into points
             const analysisPoints = JSON.parse(analysis).split("\n\n");
             setUnslides(analysisPoints);
 
             // Updated filter pattern to match both formats
-            const filteredPoints = analysisPoints.filter(point => 
+            const filteredPoints = analysisPoints.filter((point) =>
               // Match both "1. **Title**" and "**1. Title**" formats
               /(?:\d+\.\s*\*\*|\*\*\d+\.\s*)[^*]+\*\*/.test(point)
             );
-            
+
             // Keep original formatting
-            const cleanedSlides = filteredPoints.map(point => ({
-              content: point.trim()
+            const cleanedSlides = filteredPoints.map((point) => ({
+              content: point.trim(),
             }));
-            
+
             console.log("Cleaned slides data:", cleanedSlides);
             setSlides(cleanedSlides);
           }
@@ -156,10 +146,9 @@ const Page = () => {
         }
       }
     };
-  
+
     fetchFirestoreData();
   }, [publicKey]);
-
 
   useEffect(() => {
     const fetchTokenData = async () => {
@@ -703,15 +692,15 @@ const Slide9 = ({ slideData }) => {
 const Slide10 = ({ slideData }) => {
   const containerRef = useRef();
 
- // Add console logs to see what data we're receiving
- console.log("Raw slideData:", slideData);
- console.log("slideData.content:", slideData?.content);
- 
- const { title, description } = extractContent(slideData?.content);
- 
- // Log the extracted content
- console.log("Extracted title:", title);
- console.log("Extracted description:", description);
+  // Add console logs to see what data we're receiving
+  console.log("Raw slideData:", slideData);
+  console.log("slideData.content:", slideData?.content);
+
+  const { title, description } = extractContent(slideData?.content);
+
+  // Log the extracted content
+  console.log("Extracted title:", title);
+  console.log("Extracted description:", description);
 
   return (
     <div
@@ -757,7 +746,8 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
     // Default fallback content
     const defaultContent = {
       title: "The Wallet of Woe",
-      description: "Your saga of crypto adventures, featuring missed opportunities, questionable decisions, and a collection of tokens that tell quite a story.",
+      description:
+        "Your saga of crypto adventures, featuring missed opportunities, questionable decisions, and a collection of tokens that tell quite a story.",
     };
 
     // Guard clause for missing data
@@ -769,7 +759,7 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
 
     // Helper function to clean text
     const cleanText = (text) => {
-      return text.replace(/\*+/g, '').trim();
+      return text.replace(/\*+/g, "").trim();
     };
 
     // Enhanced parsing logic
@@ -780,7 +770,7 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
       if (roastMatch) {
         return {
           title: cleanText(roastMatch[1]),
-          description: defaultContent.description
+          description: defaultContent.description,
         };
       }
 
@@ -790,7 +780,7 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
       if (conclusionMatch) {
         return {
           title: cleanText(conclusionMatch[1]),
-          description: cleanText(conclusionMatch[2])
+          description: cleanText(conclusionMatch[2]),
         };
       }
 
@@ -800,15 +790,17 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
       if (titleMatch) {
         return {
           title: cleanText(titleMatch[1]),
-          description: titleMatch[2] ? cleanText(titleMatch[2]) : defaultContent.description
+          description: titleMatch[2]
+            ? cleanText(titleMatch[2])
+            : defaultContent.description,
         };
       }
 
       // If content is a string but doesn't match any format
-      if (typeof content === 'string') {
+      if (typeof content === "string") {
         return {
           title: cleanText(content) || slideData || defaultContent.title,
-          description: defaultContent.description
+          description: defaultContent.description,
         };
       }
 
@@ -818,8 +810,7 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
     return parseContent(content);
   };
 
-
-  const { title, description } = getConclusionContent(slideData[11])
+  const { title, description } = getConclusionContent(slideData[11]);
   const { symbol, icon } = notslide || { symbol: "", icon: "" };
 
   const handleShare = async () => {
@@ -1006,34 +997,34 @@ const extractContent = (content) => {
 
   // Case 1: Numbered titles with asterisks "**1. Title**"
   const numberedTitleMatch = content.match(/\*\*(\d+\.\s*[^:]+)\*\*/);
-  
+
   // Case 2: "**Title** - Description"
   const dashMatch = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
-  
+
   // Case 3: "**Title:** Description"
   const colonMatch = content.match(/\*\*([^*]+)\*\*:\s*(.+)/);
-  
+
   // Case 4: Description with asterisk after dash "- *Description*"
   const descWithAsteriskMatch = content.match(/-\s*\*([^*]+)\*/);
 
   if (numberedTitleMatch && descWithAsteriskMatch) {
     return {
       title: numberedTitleMatch[1].trim(),
-      description: descWithAsteriskMatch[1].trim()
+      description: descWithAsteriskMatch[1].trim(),
     };
   }
-  
+
   if (dashMatch) {
     return {
       title: dashMatch[1].replace(/:/g, "").trim(),
-      description: dashMatch[2].trim()
+      description: dashMatch[2].trim(),
     };
   }
-  
+
   if (colonMatch) {
     return {
       title: colonMatch[1].replace(/:/g, "").trim(),
-      description: colonMatch[2].trim()
+      description: colonMatch[2].trim(),
     };
   }
 
@@ -1044,6 +1035,6 @@ const extractContent = (content) => {
       .replace(/:/g, "")
       .replace(/^\*\*|\*\*$/g, "")
       .trim(),
-    description: descParts.join(" ").trim()
+    description: descParts.join(" ").trim(),
   };
 };

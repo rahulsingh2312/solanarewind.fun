@@ -487,3 +487,8 @@ body {
     transform: translateX(-100%) rotate(0deg) skew(10deg, 10deg);
   }
 }
+
+.text-with-border {
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.637); /* Stroke width and color */
+  text-stroke: 2px rgb(255, 255, 255); /* Fallback for supported browsers */
+}

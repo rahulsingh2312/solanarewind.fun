@@ -126,12 +126,12 @@ export default function Hero() {
     <main>
       {/* // Render the rest of the content when the Navbar is closed */}
       <>
-        <div className="absolute top-0 flex items-center justify-center w-full font-black z-10 p-4 text-white/30 max-md:text-9xl max-sm:top-96 select-none pointer-events-none mix-blend-exclusion text-[24rem] font-dmSans">
+        <div className="absolute top-0 text-with-border flex items-center justify-center w-full font-black z-10 p-4 text-white/30 max-md:text-9xl max-md:top-96 select-none pointer-events-none mix-blend-exclusion text-[24rem] font-dmSans">
           2024
         </div>
         <div className="Navbar flex w-full px-24 max-sm:px-4 absolute top-4 z-[999] items-center justify-between">
           <div className="flex items-center gap-4 font-dmSans font-semibold text-white text-xl">
-            <img src="/Logo.png" className="h-10" alt="" />
+            <img src="/logo.png" className="h-10" alt="" />
             <h1 className="max-sm:hidden">Solana Rewind</h1>
           </div>
           <WalletMultiButton
