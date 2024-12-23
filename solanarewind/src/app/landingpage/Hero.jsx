@@ -131,7 +131,7 @@ export default function Hero() {
         </div>
         <div className="Navbar flex w-full px-24 max-sm:px-4 absolute top-4 z-[999] items-center justify-between">
           <div className="flex items-center gap-4 font-dmSans font-semibold text-white text-xl">
-            <img src="/Logo.png" className="h-10" alt="" />
+            <img src="/logo.png" className="h-10" alt="" />
             <h1 className="max-sm:hidden">Solana Rewind</h1>
           </div>
           <WalletMultiButton
