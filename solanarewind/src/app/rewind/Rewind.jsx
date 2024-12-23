@@ -64,6 +64,8 @@ const Page = () => {
 
   const [itemWidth, setItemWidth] = useState(0);
   const [slides, setSlides] = useState([]);
+  const [unslides, setUnslides] = useState([]);
+
   const [topToken, setTopToken] = useState([]);
   const [tokenData, setTokenData] = useState({ symbol: "", icon: "" });
   const { publicKey } = useWallet();
@@ -133,7 +135,8 @@ const Page = () => {
             
             // Parse and split into points
             const analysisPoints = JSON.parse(analysis).split("\n\n");
-            
+            setUnslides(analysisPoints);
+
             // Updated filter pattern to match both formats
             const filteredPoints = analysisPoints.filter(point => 
               // Match both "1. **Title**" and "**1. Title**" formats
@@ -245,7 +248,7 @@ const Page = () => {
     (props) => (
       <Slide12
         {...props}
-        slideData={slides[10]}
+        slideData={unslides}
         notslide={tokenData}
         publicKey={publicKey?.toString()}
         topToken={topToken}
@@ -750,71 +753,73 @@ const Slide12 = ({ slideData, slides, notslide, publicKey, topToken }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [isShared, setIsShared] = useState(false);
 
-  // ... keeping getConclusionContent and other existing functions ...
-  const getConclusionContent = (slides) => {
-    // ... existing conclusion content logic ...
-    if (slides && slides.length > 0) {
-      const lastSlide = slides[slides.length - 1];
-      if (lastSlide?.content) {
-        if (lastSlide.content.includes("Conclusion:")) {
-          const conclusionPart = lastSlide.content
-            .split("Conclusion:")[1]
-            .trim();
-          const titleMatch = conclusionPart.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
-          if (titleMatch) {
-            return {
-              title: titleMatch[1].trim(),
-              description: titleMatch[2].trim(),
-            };
-          }
-        }
-      }
-    }
-
-    const conclusionSlide = slides?.find(
-      (slide) =>
-        slide?.content?.includes("### Conclusion:") ||
-        slide?.content?.includes("Conclusion:")
-    );
-
-    if (conclusionSlide?.content) {
-      const content = conclusionSlide.content;
-      const titleMatch = content.match(/\*\*([^*]+)\*\*\s*-\s*(.+)/);
-
-      if (titleMatch) {
-        return {
-          title: titleMatch[1].trim(),
-          description: titleMatch[2].trim(),
-        };
-      }
-    }
-
-    const titleSlide = slides?.find(
-      (slide) =>
-        slide?.content?.includes("Title:") ||
-        slide?.content?.includes("**Title:")
-    );
-
-    if (titleSlide?.content) {
-      const titleMatch = titleSlide.content.match(/Title:\s*(.+?)\s*(?:-|$)/);
-      if (titleMatch) {
-        return {
-          title: titleMatch[1].trim(),
-          description:
-            titleSlide.content.split("-")[1]?.trim() ||
-            "Your year in review on Solana",
-        };
-      }
-    }
-
-    return {
+  const getConclusionContent = (slideData) => {
+    // Default fallback content
+    const defaultContent = {
       title: "The Wallet of Woe",
-      description:
-        "Your saga of crypto adventures, featuring missed opportunities, questionable decisions, and a collection of tokens that tell quite a story.",
+      description: "Your saga of crypto adventures, featuring missed opportunities, questionable decisions, and a collection of tokens that tell quite a story.",
     };
+
+    // Guard clause for missing data
+    if (!slideData || !slideData[11]) {
+      return defaultContent;
+    }
+
+    const content = slideData[11];
+
+    // Helper function to clean text
+    const cleanText = (text) => {
+      return text.replace(/\*+/g, '').trim();
+    };
+
+    // Enhanced parsing logic
+    const parseContent = (content) => {
+      // Case 1: Match "Title: *Something*" format
+      const roastTitleRegex = /\*{2,}Title:\s*\*+([^*]+)\*+/i;
+      const roastMatch = content.match(roastTitleRegex);
+      if (roastMatch) {
+        return {
+          title: cleanText(roastMatch[1]),
+          description: defaultContent.description
+        };
+      }
+
+      // Case 2: Match "**Title** - Description" format
+      const conclusionRegex = /\*\*([^*]+)\*\*\s*-\s*(.+)/;
+      const conclusionMatch = content.match(conclusionRegex);
+      if (conclusionMatch) {
+        return {
+          title: cleanText(conclusionMatch[1]),
+          description: cleanText(conclusionMatch[2])
+        };
+      }
+
+      // Case 3: Match "Title: Something - Description" format
+      const titleRegex = /Title:\s*([^-]+)(?:-\s*(.+))?/i;
+      const titleMatch = content.match(titleRegex);
+      if (titleMatch) {
+        return {
+          title: cleanText(titleMatch[1]),
+          description: titleMatch[2] ? cleanText(titleMatch[2]) : defaultContent.description
+        };
+      }
+
+      // If content is a string but doesn't match any format
+      if (typeof content === 'string') {
+        return {
+          title: cleanText(content) || slideData || defaultContent.title,
+          description: defaultContent.description
+        };
+      }
+
+      return defaultContent;
+    };
+
+    return parseContent(content);
   };
 
-  const { title, description } = getConclusionContent(slides);
+
+  const { title, description } = getConclusionContent(slideData[11])
   const { symbol, icon } = notslide || { symbol: "", icon: "" };
 
   const handleShare = async () => {

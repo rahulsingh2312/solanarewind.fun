@@ -1,0 +1,240 @@
+    .unlockgrd{
+        /* Ellipse 49 */
+
+position: absolute;
+width: 80%;
+height: 468.79px;
+left: 0;
+top: 1481.76px;
+
+background: linear-gradient(91.62deg, rgba(254, 251, 188, 0.2) 48.58%, rgba(147, 242, 255, 0.2) 54.5%, rgba(38, 229, 255, 0.2) 63.32%);
+filter: blur(148.15px);
+transform: matrix(-0.92, -0.39, -0.39, 0.92, 0, 0);
+
+    }
+    
+    
+    .bluetext{
+        /* Easy Steps to Bet on Sports */
+
+/* font-family: 'Poppins'; */
+font-style: normal;
+
+/* identical to box height */
+
+background: linear-gradient(180deg, #00A6CB 25.69%, rgba(0, 0, 0, 0) 162.5%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+/* text-fill-color: transparent; */
+
+
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    .blueEc{
+    /* position: absolute; */
+    position: absolute;
+    width: 80%;
+    height: 403px;
+    top:15%;
+    left: 10%;
+    background: radial-gradient(50% 50% at 50% 50%, #FEFBBC 56.6%, #93F2FF 66.19%, #26E5FF 80.5%);
+    filter: blur(148.15px);
+
+    }
+
+    .whiteEc{
+        /* Ellipse 28 */
+
+display: flex;
+align-items: center;
+justify-content: center;
+width: 803px;
+height: 363px;
+
+background: #FFFFFF;
+filter: blur(79.45px);
+
+    }
+
+
+    .linehghtcss{
+     
+
+font-weight: 700;
+font-size: 74px;
+line-height: 96px;
+text-align: center;
+
+background: linear-gradient(180deg, #000000 0%, #000000 100%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+
+   
+    }
+    .linehghtcsssm{
+     
+
+        font-weight: 700;
+        font-size: 28px;
+        line-height: 36px;
+        text-align: center;
+        
+        /* background: linear-gradient(180deg, #000000 0%, #000000 100%); */
+        /* -webkit-background-clip: text; */
+        /* -webkit-text-fill-color: transparent; */
+        /* background-clip: text;
+         */
+           
+            }
+
+    .orbit1{
+        /* Ellipse 44 */
+
+box-sizing: border-box;
+border-radius: 50%;
+position: absolute;
+width: 70%;
+height: 331px;
+left: calc(50% - 70%/2 + 0.17px);
+top: 246px;
+
+border: 1px solid rgba(0, 0, 0, 0.16);
+
+    }
+
+
+
+    .aboutus{
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 37.79%, rgba(255, 255, 255, 0) 69.5%);
+        -webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+/* text-fill-color: transparent; */
+    }
+    .orbit3 {
+        box-sizing: border-box;
+        width: 60%; /* Adjust the width as needed */
+        /* height:    800px; */
+        /* position: absolute; */
+        border-radius: 100%; /* Ensures the shape is elliptical */
+        border: 7px solid transparent; /* Creates space for the border-image */
+
+        border-image: linear-gradient(to right, rgba(156, 255, 140, 0) 0%, 
+                                      rgba(156, 255, 140, 0.82) 50%, 
+                                      rgba(156, 255, 140, 0) 100%) 1;
+        text-align: center;
+       border-left:none ;
+       border-right:none ; 
+        border-bottom: none;
+        filter: blur(1px);
+    }
+   
+    .orbit4 {
+        box-sizing: border-box;
+        width: 100vw; /* Adjust the width as needed */
+        /* height:    10px; Adjust the height as needed */
+        border-radius: 100%; /* Ensures the shape is elliptical */
+        border: 15px solid transparent; /* Creates space for the border-image */
+        border-image: linear-gradient(to right, rgba(156, 255, 140, 0) 0%, 
+        rgba(156, 255, 140, 0.82) 30%, 
+        rgba(156, 255, 140, 0) 100%) 1;
+        text-align: center;
+        
+        border-bottom: none;
+        filter: blur(30px);
+    }
+    
+    .orbit5 {
+        box-sizing: border-box;
+        width: 100vw; /* Adjust the width as needed */
+        /* height:    10px; Adjust the height as needed */
+        border-radius: 100%; /* Ensures the shape is elliptical */
+        border: 15px solid transparent; /* Creates space for the border-image */
+        border-image: linear-gradient(to right, rgba(156, 255, 140, 0.82) 0%, 
+        rgba(156, 255, 140, 0) 50%, 
+        rgba(156, 255, 140, 0.82)100%) 1;
+        text-align: center;
+        
+        border-bottom: none;
+        filter: blur(30px);
+    }
+
+    .rainborder{
+        
+            box-sizing: border-box;
+            border: 1px solid transparent; /* Creates space for the border-image */
+
+            border-image: linear-gradient(to right, #00A3FF 0%, 
+            #CC4C4C 50%, 
+            #7000FF 100%) 1;
+      
+    
+    }
+    .orbit2{
+        /* Ellipse 44 */
+
+box-sizing: border-box;
+border-radius: 50%;
+position: absolute;
+width: 90%;
+height: 631px;
+left: calc(50% - 90%/2 + 0.17px);
+top: 150px;
+
+border: 1px solid rgba(0, 0, 0, 0.16);
+
+    }
+
+    .CTA{
+        /* Frame 16 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 10px 20px;
+
+
+background: #FFFFFF;
+box-shadow: 0px -4px 22.9px rgba(36, 255, 0, 0.31), 0px 4px 22.6px rgba(0, 117, 255, 0.38);
+border-radius: 42px;
+
+    }
+
+   .discordborder{
+    
+box-sizing: border-box;
+
+width: 200px;
+height: 39px;
+
+
+border: 1px solid #707070;
+backdrop-filter: blur(3.45px);
+border-radius: 10px;
+
+   } 
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
