@@ -126,6 +126,9 @@ export default function Hero() {
     <main>
       {/* // Render the rest of the content when the Navbar is closed */}
       <>
+        <div className="absolute top-0 flex items-center justify-center w-full font-black z-10 p-4 text-white/30 max-md:text-9xl max-sm:top-96 select-none pointer-events-none mix-blend-exclusion text-[24rem] font-dmSans">
+          2024
+        </div>
         <div className="Navbar flex w-full px-24 max-sm:px-4 absolute top-4 z-[999] items-center justify-between">
           <div className="flex items-center gap-4 font-dmSans font-semibold text-white text-xl">
             <img src="/Logo.png" className="h-10" alt="" />
@@ -173,7 +176,7 @@ export default function Hero() {
             alt="alt"
             src={basketball}
             draggable="false"
-            className="absolute bottom-[50%] scale-[30%] rotate-45 z-50 pointer-events-none select-none"
+            className="absolute bottom-[50%] scale-[30%] rotate-45 z-40 -left-16 pointer-events-none select-none"
           />
         </div>
         <div className="md:hidden">
@@ -181,7 +184,7 @@ export default function Hero() {
             alt="alt"
             src={football}
             draggable="false"
-            className="absolute bottom-[49%] scale-[20%] -right-24 z-40 pointer-events-none select-none"
+            className="absolute bottom-[40%] scale-[20%] -right-24 z-30 pointer-events-none select-none"
           />
         </div>
         <div className="md:hidden">
@@ -190,7 +193,7 @@ export default function Hero() {
             ref={baseballRef}
             src={baseball}
             draggable="false"
-            className="absolute -top-[2%] -left-24 scale-[10%] z-50 pointer-events-none select-none"
+            className="absolute -top-[2%] -left-32 scale-[10%] z-50 pointer-events-none select-none"
           />
         </div>
         <div onClick={toggleNavbar} className="md:hidden">
@@ -289,7 +292,7 @@ export default function Hero() {
           {/* <Navbar /> */}
           <div className="relative z-40 flex gap-8 md:gap-12 flex-col items-center justify-center h-[35vh] md:h-[75vh] text-center">
             <div className="relative">
-              <p className="font-bold text-black font-dmSans text-[28px] md:text-7xl max-w-[326px] md:max-w-[970px]">
+              <p className="font-bold text-black font-dmSans text-4xl md:text-7xl max-w-[326px] md:max-w-[970px]">
                 Ready For your Solana Rewind?
               </p>
               <div className="absolute hidden md:block md:bottom-[25%] -rotate-12 lg:bottom-[20%] lg:left-0 w-[72px] h-[72px] z-50">
