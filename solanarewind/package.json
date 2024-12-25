@@ -46,7 +46,9 @@
     "react-fast-marquee": "^1.6.5",
     "react-icons": "^5.4.0",
     "react-slick": "^0.30.3",
-    "react-starfield-animation": "^1.0.1"
+    "react-starfield-animation": "^1.0.1",
+    "react-tweet": "^3.2.1",
+    "sass": "^1.83.0"
   },
   "devDependencies": {
     "@types/react": "19.0.1",

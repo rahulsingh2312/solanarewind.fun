@@ -230,8 +230,6 @@ export default function Hero() {
           />
         </div>
 
-        {/* dot elements */}
-
         {/* main section with padding */}
         <div className="px-6 pt-10 sm:px-12 md:px-20 md:pb-12 lg:px-28">
           <div className="flex justify-center md:hidden">
@@ -292,15 +290,30 @@ export default function Hero() {
           {/* <Navbar /> */}
           <div className="relative z-40 flex gap-8 md:gap-12 flex-col items-center justify-center h-[35vh] md:h-[75vh] text-center">
             <div className="relative">
-              <p className="font-bold text-black font-dmSans text-4xl md:text-7xl max-w-[326px] md:max-w-[970px]">
+              <div className="flex gap-2 justify-center items-center w-fit mx-auto">
+                <p className="bg-black/40 px-4 py-1 max-sm:text-xs rounded-full w-fit flex items-center text-center mx-auto backdrop-blur-sm font-medium">
+                  Wallets Roasted Till date:{" "}
+                </p>
+                <div className="flex items-center gap-2 text-lg max-sm:text-sm font-semibold">
+                  <img
+                    src="/users3.png"
+                    className="h-8 select-none max-sm:h-6"
+                    draggable="false"
+                    alt=""
+                  />{" "}
+                  500+
+                </div>
+              </div>
+              <h1 className="font-bold text-black font-dmSans text-4xl md:text-7xl max-w-[326px] md:max-w-[970px]">
                 Ready For your Solana Rewind?
-              </p>
+              </h1>
               <div className="absolute hidden md:block md:bottom-[25%] -rotate-12 lg:bottom-[20%] lg:left-0 w-[72px] h-[72px] z-50">
                 <Image
                   alt="alt"
                   src={baseball}
                   ref={baseballRef}
-                  className=""
+                  className="select-none"
+                  draggable="false"
                 />
               </div>
               <div className="absolute hidden md:block md:bottom-[25%] lg:bottom-[20%] right-[1%] w-[72px] h-[72px] z-50">
@@ -308,7 +321,8 @@ export default function Hero() {
                   alt="alt"
                   src={rugby}
                   ref={rugbyRef}
-                  className="rotate-12"
+                  className="rotate-12 select-none"
+                  draggable="false"
                 />
               </div>
             </div>
@@ -342,7 +356,7 @@ export default function Hero() {
         </div>
       </div>
     </div> */}
-          <div className="relative max-sm:absolute max-sm:bottom-10 z-40 flex items-center justify-center gap-4 mt-10">
+          <div className="relative z-40 flex items-center justify-center gap-4 mt-10">
             {/* <div className="border-[#707070] border-[1px] items-center pl-3 rounded-xl flex gap-4 ">
             <p className="font-inter text-[10px] ">Join Our Discord Community</p>
             <Image alt="alt" src={discord} className="rounded-r-xl" />
