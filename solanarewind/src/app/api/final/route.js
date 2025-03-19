@@ -14,9 +14,9 @@ export async function GET(request) {
   const baseUrl = 'https://solanarewind.vercel.app/';
   const endpoints = {
     summary: `${baseUrl}/api/summary?walletAddress=${walletAddress}`,
-    nfts: `${baseUrl}/api/nfts?walletAddress=${walletAddress}`,
-    // tokensTransactions: `${baseUrl}/api/tokens?walletAddress=${walletAddress}&type=transactions`,
-    tokensOwned: `${baseUrl}/api/tokens?walletAddress=${walletAddress}&type=tokens`
+    // nfts: `${baseUrl}/api/nfts?walletAddress=${walletAddress}`,
+    // // tokensTransactions: `${baseUrl}/api/tokens?walletAddress=${walletAddress}&type=transactions`,
+    // tokensOwned: `${baseUrl}/api/tokens?walletAddress=${walletAddress}&type=tokens`
   };
 
   try {

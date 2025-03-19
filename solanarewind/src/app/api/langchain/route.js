@@ -33,7 +33,7 @@ export async function POST(req) {
     // Fetch wallet summary from the external API
     console.log('Fetching wallet summary');
     const apiResponse = await fetch(
-      `https://solanarewind.vercel.app/api/final?walletAddress=${walletAddress}`
+      `https://solanarewind.vercel.app/api/summary?walletAddress=${walletAddress}`
     );
 
     if (!apiResponse.ok) {
